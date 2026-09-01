@@ -43,7 +43,7 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 
 
 
- Roles de Usuario
+**Roles de Usuario**
 El sistema cuenta con un control de acceso basado en roles (RBAC):
 
 Encargada / Administración: Acceso total a la gestión operativa y reportes.
@@ -56,5 +56,5 @@ Guardias de Seguridad: Acceso exclusivo de lectura al mapa/panel perimetral.
 
 Administrador TI: Gestión de perfiles, base de datos y métricas de rendimiento.
 
-✒️ Autor
-Alexander Pascual Contreras Riquelme - Desarrollador Full-Stack
+**Autor**
+Alexander Pascual Contreras Riquelme - Desarrollador -IECI 
