@@ -1,5 +1,4 @@
- Sistema Web Integrado - Aldea Infantil SOS Angol
-
+ **Sistema Web Integrado - Aldea Infantil SOS Angol**
 
 Descripción del Proyecto
 Este es un sistema web integrado desarrollado para la digitalización y optimización de la gestión operativa, de seguridad y sostenibilidad de la Aldea Infantil SOS Angol. El proyecto busca centralizar la información de los turnos rotativos, automatizar alertas de mantenimiento y dotar a la seguridad externa de una herramienta de monitoreo eficiente, transformando los procesos analógicos en un ecosistema digital robusto.
@@ -41,3 +40,21 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 
 1. **Clonar el repositorio:**
    ## git clone "https://github.com/alex4212/tallerdedesarrollo.git"
+
+
+
+ Roles de Usuario
+El sistema cuenta con un control de acceso basado en roles (RBAC):
+
+Encargada / Administración: Acceso total a la gestión operativa y reportes.
+
+Cuidadoras (Trato Directo): Acceso a rendición de boletas y gestión de turnos de su casa asignada.
+
+Personal de Mantención: Acceso a alertas y tareas programadas.
+
+Guardias de Seguridad: Acceso exclusivo de lectura al mapa/panel perimetral.
+
+Administrador TI: Gestión de perfiles, base de datos y métricas de rendimiento.
+
+✒️ Autor
+Alexander Pascual Contreras Riquelme - Desarrollador Full-Stack
