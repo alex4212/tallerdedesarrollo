@@ -1,101 +1,112 @@
-
-let minors = [];
-let houses = [
-  { id: 1, name: 'Casa Esperanza', capacity: 10, currentOccupancy: 0 },
-  { id: 2, name: 'Casa Refugio', capacity: 5, currentOccupancy: 0 }
-];
-let educators = [
-  { id: 1, name: 'María Pérez', role: 'Educadora', isOnActiveShift: true, houseId: 1 },
-  { id: 2, name: 'Carmen Rojas', role: 'Educadora', isOnActiveShift: false, houseId: 1 },
-  { id: 3, name: 'Lucía Gómez', role: 'Educadora', isOnActiveShift: true, houseId: 2 }
+let menores = [];
+let casas = [
+  { id: 1, nombre: 'Casa 1', capacidad: 5, ocupacionActual: 0 },
+  { id: 2, nombre: 'Casa 2', capacidad: 5, ocupacionActual: 0 },
+  { id: 3, nombre: 'Casa 3', capacidad: 5, ocupacionActual: 0 },
+  { id: 4, nombre: 'Casa 4', capacidad: 5, ocupacionActual: 0 },
+  { id: 5, nombre: 'Casa 5', capacidad: 5, ocupacionActual: 0 }
 ];
 
+let educadoras = [
+  { id: 1, nombre: 'María Pérez', rol: 'Encargada de Casa', casaId: 1 },
+  { id: 2, nombre: 'Carmen Rojas', rol: 'Encargada de Casa', casaId: 2 },
+  { id: 3, nombre: 'Lucía Gómez', rol: 'Encargada de Casa', casaId: 3 },
+  { id: 4, nombre: 'Ana Soto', rol: 'Encargada de Casa', casaId: 4 },
+  { id: 5, nombre: 'Rosa Díaz', rol: 'Encargada de Casa', casaId: 5 }
+];
 
-const admitMinor = (req, res) => {
-  const { name, age, courtOrderNumber, admissionDate } = req.body;
 
-  if (!name || !courtOrderNumber) {
-    return res.status(400).json({ message: 'Nombre y Número de Orden de Tribunal son requeridos' });
+const ingresarMenor = (req, res) => {
+  const { nombre, edad, folioLegal, fechaIngreso } = req.body;
+
+  if (!nombre || !folioLegal) {
+    return res.status(400).json({ message: 'Nombre y Folio Legal son requeridos' });
   }
 
-  const newMinor = {
-    id: minors.length + 1,
-    name,
-    age,
-    courtOrderNumber,
-    admissionDate: admissionDate || new Date().toISOString(),
-    assignedHouseId: null,
-    status: 'Ingresado'
+  const nuevoMenor = {
+    id: menores.length + 1,
+    nombre,
+    edad,
+    folioLegal,
+    fechaIngreso: fechaIngreso || new Date().toISOString(),
+    casaAsignadaId: null,
+    estado: 'Ingresado'
   };
 
-  minors.push(newMinor);
+  menores.push(nuevoMenor);
 
   res.status(201).json({
     message: 'Menor ingresado exitosamente al sistema',
-    minor: newMinor
+    menor: nuevoMenor
   });
 };
 
 
-const assignHouse = (req, res) => {
-  const { minorId } = req.params;
-  const { houseId } = req.body;
+const asignarCasa = (req, res) => {
+  const { menorId } = req.params;
+  const { casaId } = req.body;
 
-  const minor = minors.find(m => m.id === parseInt(minorId));
-  const house = houses.find(h => h.id === parseInt(houseId));
+  const menor = menores.find(m => m.id === parseInt(menorId));
+  const casa = casas.find(h => h.id === parseInt(casaId));
 
-  if (!minor) return res.status(404).json({ message: 'Menor no encontrado' });
-  if (!house) return res.status(404).json({ message: 'Casa no encontrada' });
+  if (!menor) return res.status(404).json({ message: 'Menor no encontrado' });
+  if (!casa) return res.status(404).json({ message: 'Casa no encontrada' });
 
-  if (house.currentOccupancy >= house.capacity) {
+  if (casa.ocupacionActual >= casa.capacidad) {
     return res.status(400).json({ message: 'La casa ha alcanzado su capacidad máxima' });
   }
 
-
-  if (minor.assignedHouseId) {
-    const oldHouse = houses.find(h => h.id === minor.assignedHouseId);
-    if (oldHouse) oldHouse.currentOccupancy--;
+  if (menor.casaAsignadaId) {
+    const casaAntigua = casas.find(h => h.id === menor.casaAsignadaId);
+    if (casaAntigua) casaAntigua.ocupacionActual--;
   }
 
-  minor.assignedHouseId = house.id;
-  minor.status = 'Asignado a Casa';
-  house.currentOccupancy++;
+  menor.casaAsignadaId = casa.id;
+  menor.estado = 'Asignado a Casa';
+  casa.ocupacionActual++;
 
   res.json({
     message: 'Casa asignada exitosamente',
-    minor,
-    house: { id: house.id, name: house.name, currentOccupancy: house.currentOccupancy }
+    menor,
+    casa: { id: casa.id, nombre: casa.nombre, ocupacionActual: casa.ocupacionActual }
   });
 };
 
 
-const getActiveShiftEducators = (req, res) => {
-
-  const activeEducators = educators
-    .filter(e => e.isOnActiveShift)
-    .map(e => {
-      const assignedHouse = houses.find(h => h.id === e.houseId);
+const obtenerEducadorasTurnoActivo = (req, res) => {
+  const educadorasActivas = educadoras.map(e => {
+      const casaAsignada = casas.find(h => h.id === e.casaId);
       return {
         id: e.id,
-        name: e.name,
-        house: assignedHouse ? assignedHouse.name : 'Sin asignar'
+        nombre: e.nombre,
+        casa: casaAsignada ? casaAsignada.nombre : 'Sin asignar'
       };
     });
 
   res.json({
     message: 'Educadoras en turno activo',
-    activeEducators
+    educadorasActivas
   });
 };
 
 
-const getMinors = (req, res) => {
-  res.json(minors);
+const obtenerMenores = (req, res) => {
+  res.json(menores);
+};
+
+const obtenerCasas = (req, res) => {
+  res.json(casas);
+};
+
+const obtenerEducadoras = (req, res) => {
+  res.json(educadoras);
 };
 
 module.exports = {
-  admitMinor,
-  assignHouse,
-  getActiveShiftEducators,
-  getMinors
+  ingresarMenor,
+  asignarCasa,
+  obtenerEducadorasTurnoActivo,
+  obtenerMenores,
+  obtenerCasas,
+  obtenerEducadoras
 };

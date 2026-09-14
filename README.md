@@ -1,8 +1,8 @@
-# 🏡 Sistema Web Integrado - Aldea Infantil SOS Angol
+#  Sistema Web Integrado - Aldea Infantil SOS Angol
 
 > Sistema web desarrollado para la digitalización y optimización de la gestión operativa, de seguridad y sostenibilidad de la Aldea Infantil SOS Angol.
 
-## 📝 Descripción del Proyecto
+##  Descripción del Proyecto
 
 El proyecto busca centralizar la información de los turnos rotativos, automatizar alertas de mantenimiento y dotar a la seguridad externa de una herramienta de monitoreo eficiente. De esta forma, se transforman los procesos analógicos y manuales en un **ecosistema digital robusto y eficiente**.
 

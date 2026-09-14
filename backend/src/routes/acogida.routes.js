@@ -1,14 +1,21 @@
 const { Router } = require('express');
 const acogidaController = require('../controllers/acogida.controller');
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 
 const router = Router();
 
-router.post('/minors', acogidaController.admitMinor);
+router.use(verifyToken);
 
-router.post('/minors/:minorId/assign-house', acogidaController.assignHouse);
+router.post('/menores', isAdmin, acogidaController.ingresarMenor);
 
-router.get('/shifts/active', acogidaController.getActiveShiftEducators);
+router.post('/menores/:menorId/asignar-casa', isAdmin, acogidaController.asignarCasa);
 
-router.get('/minors', acogidaController.getMinors);
+router.get('/turnos/activos', acogidaController.obtenerEducadorasTurnoActivo);
+
+router.get('/menores', acogidaController.obtenerMenores);
+
+router.get('/casas', acogidaController.obtenerCasas);
+
+router.get('/educadoras', acogidaController.obtenerEducadoras);
 
 module.exports = router;
