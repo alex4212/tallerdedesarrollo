@@ -13,4 +13,7 @@ router.post('/tareas', isAdmin, validateTask, mantenimientoController.crearTarea
 
 router.patch('/tareas/:id/estado', validateTaskStatus, mantenimientoController.actualizarEstadoTarea);
 
+router.put('/tareas/:id', validateTask, mantenimientoController.actualizarTarea);
+router.delete('/tareas/:id', mantenimientoController.eliminarTarea);
+
 module.exports = router;

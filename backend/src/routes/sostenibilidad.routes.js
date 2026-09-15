@@ -11,6 +11,9 @@ router.get('/gastos', sostenibilidadController.obtenerGastos);
 
 router.patch('/gastos/:id/estado', isAdmin, validateExpenseStatus, sostenibilidadController.actualizarEstadoGasto);
 
+router.put('/gastos/:id', validateExpense, sostenibilidadController.actualizarGasto);
+router.delete('/gastos/:id', sostenibilidadController.eliminarGasto);
+
 router.post('/gastos', validateExpense, sostenibilidadController.registrarGasto);
 
 module.exports = router;

@@ -5,7 +5,7 @@ const users = [
     email: 'Ivresse.jorquera@aldeasinfantiles.cl',
     password: 'Ivresse Jorquera',
     role: 'ADMIN',
-    houseId: null // Encargada de todas las casas
+    houseId: null
   }
 ];
 

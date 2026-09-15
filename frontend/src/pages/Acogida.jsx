@@ -120,7 +120,7 @@ export default function Acogida() {
               <label>Orden de Tribunal (Folio)</label>
               <input type="text" value={ordenTribunal} onChange={e => setOrdenTribunal(e.target.value)} required />
             </div>
-            <button type="submit" className="btn-primary">Registrar Menor</button>
+            <button type="submit" className="btn-primary">Registrar menor</button>
           </form>
         </div>
 

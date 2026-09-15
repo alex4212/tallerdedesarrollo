@@ -34,6 +34,30 @@ export default function Sostenibilidad() {
     }
   };
 
+  const eliminarGasto = async (id) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este gasto?')) return;
+    try {
+      await fetchAPI(`/sostenibilidad/gastos/${id}`, { method: 'DELETE' });
+      cargarGastos();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const actualizarGasto = async (g) => {
+    const nuevaDesc = window.prompt('Nueva descripción:', g.descripcion);
+    if (!nuevaDesc || nuevaDesc === g.descripcion) return;
+    try {
+      await fetchAPI(`/sostenibilidad/gastos/${g.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ descripcion: nuevaDesc, monto: g.monto, casaId: g.casaId })
+      });
+      cargarGastos();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="page-fade-in">
       <div className="glass-card header-card mb-6">
@@ -70,6 +94,12 @@ export default function Sostenibilidad() {
                     </button>
                   </>
                 )}
+                <button onClick={() => actualizarGasto(g)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem'}}>
+                  Actualizar
+                </button>
+                <button onClick={() => eliminarGasto(g.id)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)'}}>
+                  Eliminar
+                </button>
               </div>
             </div>
           ))}

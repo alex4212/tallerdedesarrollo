@@ -43,8 +43,29 @@ const actualizarEstadoTarea = (req, res) => {
   });
 };
 
+const actualizarTarea = (req, res) => {
+  const { id } = req.params;
+  const { descripcion, casaId, fechaLimite } = req.body;
+  const tarea = tareas.find(t => t.id === parseInt(id));
+  if (!tarea) return res.status(404).json({ message: 'Tarea no encontrada' });
+  if (descripcion) tarea.descripcion = descripcion;
+  if (casaId) tarea.casaId = casaId;
+  if (fechaLimite !== undefined) tarea.fechaLimite = fechaLimite;
+  res.json({ message: 'Tarea actualizada', tarea });
+};
+
+const eliminarTarea = (req, res) => {
+  const { id } = req.params;
+  const index = tareas.findIndex(t => t.id === parseInt(id));
+  if (index === -1) return res.status(404).json({ message: 'Tarea no encontrada' });
+  tareas.splice(index, 1);
+  res.json({ message: 'Tarea eliminada' });
+};
+
 module.exports = {
   crearTarea,
   obtenerTareas,
-  actualizarEstadoTarea
+  actualizarEstadoTarea,
+  actualizarTarea,
+  eliminarTarea
 };

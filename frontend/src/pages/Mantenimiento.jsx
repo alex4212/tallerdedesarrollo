@@ -52,6 +52,30 @@ export default function Mantenimiento() {
     }
   };
 
+  const eliminarTarea = async (id) => {
+    if (!window.confirm('¿Seguro que deseas eliminar esta tarea?')) return;
+    try {
+      await fetchAPI(`/mantenimiento/tareas/${id}`, { method: 'DELETE' });
+      cargarTareas();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const actualizarTarea = async (t) => {
+    const nuevaDesc = window.prompt('Nueva descripción:', t.descripcion);
+    if (!nuevaDesc || nuevaDesc === t.descripcion) return;
+    try {
+      await fetchAPI(`/mantenimiento/tareas/${t.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ descripcion: nuevaDesc, casaId: t.casaId, fechaLimite: t.fechaLimite })
+      });
+      cargarTareas();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="page-fade-in">
       <div className="glass-card header-card mb-6">
@@ -102,6 +126,12 @@ export default function Mantenimiento() {
                     <CheckCircle size={24} />
                   </button>
                 )}
+                <button onClick={() => actualizarTarea(t)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem'}}>
+                  Actualizar
+                </button>
+                <button onClick={() => eliminarTarea(t.id)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)'}}>
+                  Eliminar
+                </button>
               </div>
             </div>
           ))}

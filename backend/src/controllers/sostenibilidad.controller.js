@@ -45,8 +45,29 @@ const actualizarEstadoGasto = (req, res) => {
   });
 };
 
+const actualizarGasto = (req, res) => {
+  const { id } = req.params;
+  const { descripcion, monto, casaId } = req.body;
+  const gasto = gastos.find(g => g.id === parseInt(id));
+  if (!gasto) return res.status(404).json({ message: 'Gasto no encontrado' });
+  if (descripcion) gasto.descripcion = descripcion;
+  if (monto) gasto.monto = monto;
+  if (casaId) gasto.casaId = casaId;
+  res.json({ message: 'Gasto actualizado', gasto });
+};
+
+const eliminarGasto = (req, res) => {
+  const { id } = req.params;
+  const index = gastos.findIndex(g => g.id === parseInt(id));
+  if (index === -1) return res.status(404).json({ message: 'Gasto no encontrado' });
+  gastos.splice(index, 1);
+  res.json({ message: 'Gasto eliminado' });
+};
+
 module.exports = {
   registrarGasto,
   obtenerGastos,
-  actualizarEstadoGasto
+  actualizarEstadoGasto,
+  actualizarGasto,
+  eliminarGasto
 };

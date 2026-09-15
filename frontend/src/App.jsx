@@ -4,6 +4,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Acogida from './pages/Acogida';
 import Mantenimiento from './pages/Mantenimiento';
 import Sostenibilidad from './pages/Sostenibilidad';
+import { X } from 'lucide-react';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -15,11 +16,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard/acogida" />} />
-        
+
         <Route path="/login" element={<Login />} />
-        
-        <Route 
-          path="/dashboard" 
+
+        <Route
+          path="/dashboard"
           element={
             <PrivateRoute>
               <DashboardLayout />
