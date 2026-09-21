@@ -9,6 +9,7 @@ export default function Mantenimiento() {
   
   const [casaId, setCasaId] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [tipo, setTipo] = useState('CORRECTIVO');
   const [editandoTarea, setEditandoTarea] = useState(null);
 
   const cargarTareas = async () => {
@@ -44,17 +45,18 @@ export default function Mantenimiento() {
       if (editandoTarea) {
         await fetchAPI(`/mantenimiento/tareas/${editandoTarea.id}`, {
           method: 'PUT',
-          body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite: editandoTarea.fechaLimite })
+          body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite: editandoTarea.fechaLimite, tipo })
         });
         setEditandoTarea(null);
       } else {
         await fetchAPI('/mantenimiento/tareas', {
           method: 'POST',
-          body: JSON.stringify({ casaId: Number(casaId), descripcion })
+          body: JSON.stringify({ casaId: Number(casaId), descripcion, tipo })
         });
       }
       setCasaId('');
       setDescripcion('');
+      setTipo('CORRECTIVO');
       cargarTareas();
     } catch (err) {
       alert(err.message);
@@ -65,12 +67,14 @@ export default function Mantenimiento() {
     setEditandoTarea(t);
     setCasaId(t.casaId);
     setDescripcion(t.descripcion);
+    setTipo(t.tipo || 'CORRECTIVO');
   };
 
   const cancelarEdicion = () => {
     setEditandoTarea(null);
     setCasaId('');
     setDescripcion('');
+    setTipo('CORRECTIVO');
   };
 
   const marcarCompletada = async (id) => {
@@ -118,9 +122,19 @@ export default function Mantenimiento() {
               </option>
             ))}
           </select>
+          <select 
+            value={tipo} 
+            onChange={e => setTipo(e.target.value)} 
+            required
+            className="input-select"
+            style={{ minWidth: '150px', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+          >
+            <option value="CORRECTIVO" style={{ background: 'var(--bg-color)', color: 'white' }}>Correctivo</option>
+            <option value="PREVENTIVO" style={{ background: 'var(--bg-color)', color: 'white' }}>Preventivo</option>
+          </select>
           <input 
             type="text" 
-            placeholder="Descripción de la tarea" 
+            placeholder="Descripción de la tarea"  
             value={descripcion} 
             onChange={e => setDescripcion(e.target.value)} 
             required 
@@ -148,7 +162,7 @@ export default function Mantenimiento() {
           {loading ? <p>Cargando...</p> : tareas.map(t => (
             <div key={t.id} className="list-item">
               <div>
-                <h4>{t.descripcion}</h4>
+                <h4>{t.descripcion} <span style={{fontSize: '0.75rem', opacity: 0.8, marginLeft: '8px', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px'}}>{t.tipo || 'CORRECTIVO'}</span></h4>
                 <small className="text-muted">Casa {t.casaId} | Límite: {t.fechaLimite || 'Sin fecha'}</small>
               </div>
               <div className="flex-align-center gap-2">

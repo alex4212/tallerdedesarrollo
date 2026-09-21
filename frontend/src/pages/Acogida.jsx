@@ -9,6 +9,7 @@ export default function Acogida() {
   const [loading, setLoading] = useState(true);
 
   const [nombreMenor, setNombreMenor] = useState('');
+  const [rutMenor, setRutMenor] = useState('');
   const [ordenTribunal, setOrdenTribunal] = useState('');
   const [edad, setEdad] = useState('');
 
@@ -42,9 +43,10 @@ export default function Acogida() {
     try {
       await fetchAPI('/acogida/menores', {
         method: 'POST',
-        body: JSON.stringify({ nombre: nombreMenor, edad: Number(edad), folioLegal: ordenTribunal })
+        body: JSON.stringify({ nombre: nombreMenor, rut: rutMenor, edad: Number(edad), folioLegal: ordenTribunal })
       });
       setNombreMenor('');
+      setRutMenor('');
       setEdad('');
       setOrdenTribunal('');
       cargarDatos();
@@ -91,12 +93,28 @@ export default function Acogida() {
             const encargada = educadoras.find(e => e.casaId === casa.id);
             const estaLlena = casa.ocupacionActual >= casa.capacidad;
             return (
-              <div key={casa.id} className="glass-container" style={{ padding: '15px', textAlign: 'center' }}>
+              <div key={casa.id} className="glass-container house-card" style={{ padding: '15px', textAlign: 'center' }}>
                 <Home size={32} style={{ color: estaLlena ? 'var(--danger)' : 'var(--primary-color)', margin: '0 auto 10px' }} />
                 <h4>{casa.nombre}</h4>
                 <p className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>Encargada: {encargada ? encargada.nombre : 'N/A'}</p>
                 <div className={`badge ${estaLlena ? 'rechazado' : 'aprobado'}`}>
                   {casa.ocupacionActual} / {casa.capacidad} Niños
+                </div>
+                
+                <div className="house-details-overlay">
+                  <h4 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '0.9rem' }}>Menores Asignados</h4>
+                  <ul className="house-details-list">
+                    {menores.filter(m => m.casaAsignadaId === casa.id).length > 0 ? (
+                      menores.filter(m => m.casaAsignadaId === casa.id).map(m => (
+                        <li key={m.id}>
+                          <span>{m.nombre}</span>
+                          <span className="text-muted">{m.edad}a</span>
+                        </li>
+                      ))
+                    ) : (
+                      <li style={{ justifyContent: 'center', color: 'var(--text-muted)' }}>Sin menores</li>
+                    )}
+                  </ul>
                 </div>
               </div>
             );
@@ -104,64 +122,72 @@ export default function Acogida() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }} className="mb-6">
-        <div className="glass-card">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'stretch' }} className="mb-6">
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
           <h3 className="mb-4 flex-align-center gap-2"><UserPlus size={20}/> Registrar Nuevo Ingreso</h3>
-          <form onSubmit={registrarMenor}>
-            <div className="input-group">
-              <label>Nombre Completo</label>
-              <input type="text" value={nombreMenor} onChange={e => setNombreMenor(e.target.value)} required />
+          <form onSubmit={registrarMenor} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ flex: 1 }}>
+              <div className="input-group">
+                <label>Nombre Completo</label>
+                <input type="text" value={nombreMenor} onChange={e => setNombreMenor(e.target.value)} required />
+              </div>
+              <div className="input-group">
+                <label>RUT</label>
+                <input type="text" value={rutMenor} onChange={e => setRutMenor(e.target.value)} required placeholder="12.345.678-9" />
+              </div>
+              <div className="input-group">
+                <label>Edad</label>
+                <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required />
+              </div>
+              <div className="input-group">
+                <label>Orden de Tribunal (Folio)</label>
+                <input type="text" value={ordenTribunal} onChange={e => setOrdenTribunal(e.target.value)} required />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Edad</label>
-              <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required />
-            </div>
-            <div className="input-group">
-              <label>Orden de Tribunal (Folio)</label>
-              <input type="text" value={ordenTribunal} onChange={e => setOrdenTribunal(e.target.value)} required />
-            </div>
-            <button type="submit" className="btn-primary">Registrar menor</button>
+            <button type="submit" className="btn-primary" style={{ marginTop: 'auto' }}>Registrar menor</button>
           </form>
         </div>
 
-        <div className="glass-card">
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
           <h3 className="mb-4 flex-align-center gap-2"><Home size={20}/> Asignar a Casa</h3>
-          <form onSubmit={asignarCasa}>
-            <div className="input-group">
-              <label>Seleccionar Menor</label>
-              <select 
-                className="input-select"
-                value={menorSeleccionado} 
-                onChange={e => setMenorSeleccionado(e.target.value)} 
-                required
-                style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
-              >
-                <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige un menor --</option>
-                {menores.map(m => (
-                  <option key={m.id} value={m.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
-                    {m.nombre} (Actual: {m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'})
-                  </option>
-                ))}
-              </select>
+          <form onSubmit={asignarCasa} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ flex: 1 }}>
+              <div className="input-group">
+                <label>Seleccionar Menor</label>
+                <select 
+                  className="input-select"
+                  value={menorSeleccionado} 
+                  onChange={e => setMenorSeleccionado(e.target.value)} 
+                  required
+                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+                >
+                  <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige un menor --</option>
+                  {menores.map(m => (
+                    <option key={m.id} value={m.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
+                      {m.nombre} - {m.rut || 'Sin RUT'} (Actual: {m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Seleccionar Casa</label>
+                <select 
+                  className="input-select"
+                  value={casaSeleccionada} 
+                  onChange={e => setCasaSeleccionada(e.target.value)} 
+                  required
+                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+                >
+                  <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige una casa --</option>
+                  {casas.map(c => (
+                    <option key={c.id} value={c.id} style={{ background: 'var(--bg-color)', color: 'white' }} disabled={c.ocupacionActual >= c.capacidad}>
+                      {c.nombre} ({c.ocupacionActual}/{c.capacidad} ocupados)
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="input-group">
-              <label>Seleccionar Casa</label>
-              <select 
-                className="input-select"
-                value={casaSeleccionada} 
-                onChange={e => setCasaSeleccionada(e.target.value)} 
-                required
-                style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
-              >
-                <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige una casa --</option>
-                {casas.map(c => (
-                  <option key={c.id} value={c.id} style={{ background: 'var(--bg-color)', color: 'white' }} disabled={c.ocupacionActual >= c.capacidad}>
-                    {c.nombre} ({c.ocupacionActual}/{c.capacidad} ocupados)
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="btn-primary" style={{marginTop: '10px'}}>Asignar Casa</button>
+            <button type="submit" className="btn-primary" style={{ marginTop: 'auto' }}>Asignar Casa</button>
           </form>
         </div>
       </div>
@@ -173,6 +199,7 @@ export default function Acogida() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>RUT</th>
                 <th>Nombre</th>
                 <th>Folio Legal</th>
                 <th>Casa Asignada</th>
@@ -181,13 +208,14 @@ export default function Acogida() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="5" className="text-center">Cargando...</td></tr>
+                <tr><td colSpan="6" className="text-center">Cargando...</td></tr>
               ) : menores.length === 0 ? (
-                <tr><td colSpan="5" className="text-center">No hay menores registrados.</td></tr>
+                <tr><td colSpan="6" className="text-center">No hay menores registrados.</td></tr>
               ) : (
                 menores.map(m => (
                   <tr key={m.id}>
                     <td>#{m.id}</td>
+                    <td>{m.rut || 'N/A'}</td>
                     <td>{m.nombre}</td>
                     <td>{m.folioLegal}</td>
                     <td>{m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'}</td>

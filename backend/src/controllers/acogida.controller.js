@@ -17,16 +17,21 @@ let educadoras = [
 
 
 const ingresarMenor = (req, res) => {
-  const { nombre, edad, folioLegal, fechaIngreso } = req.body;
+  const { nombre, edad, folioLegal, rut, fechaIngreso } = req.body;
 
-  if (!nombre || !folioLegal) {
-    return res.status(400).json({ message: 'Nombre y Folio Legal son requeridos' });
+  if (!nombre || !folioLegal || !rut || edad === undefined) {
+    return res.status(400).json({ message: 'Nombre, RUT, Edad y Folio Legal son requeridos' });
+  }
+
+  if (Number(edad) >= 18) {
+    return res.status(400).json({ message: 'El ingresado debe ser menor de edad (menor a 18 años)' });
   }
 
   const nuevoMenor = {
     id: menores.length + 1,
     nombre,
-    edad,
+    rut,
+    edad: Number(edad),
     folioLegal,
     fechaIngreso: fechaIngreso || new Date().toISOString(),
     casaAsignadaId: null,

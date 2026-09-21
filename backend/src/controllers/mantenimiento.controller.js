@@ -1,16 +1,17 @@
 let tareas = [
-  { id: 1, casaId: 1, descripcion: 'Reparar llave de agua del baño', estado: 'PENDIENTE', fechaLimite: '2026-10-01' }
+  { id: 1, casaId: 1, descripcion: 'Reparar llave de agua del baño', estado: 'PENDIENTE', fechaLimite: '2026-10-01', tipo: 'CORRECTIVO' }
 ];
 
 const crearTarea = (req, res) => {
-  const { casaId, descripcion, fechaLimite } = req.body;
+  const { casaId, descripcion, fechaLimite, tipo } = req.body;
 
   const nuevaTarea = {
     id: tareas.length + 1,
     casaId,
     descripcion,
     estado: 'PENDIENTE',
-    fechaLimite: fechaLimite || 'Sin fecha'
+    fechaLimite: fechaLimite || 'Sin fecha',
+    tipo: tipo || 'CORRECTIVO'
   };
 
   tareas.push(nuevaTarea);
@@ -45,12 +46,13 @@ const actualizarEstadoTarea = (req, res) => {
 
 const actualizarTarea = (req, res) => {
   const { id } = req.params;
-  const { descripcion, casaId, fechaLimite } = req.body;
+  const { descripcion, casaId, fechaLimite, tipo } = req.body;
   const tarea = tareas.find(t => t.id === parseInt(id));
   if (!tarea) return res.status(404).json({ message: 'Tarea no encontrada' });
   if (descripcion) tarea.descripcion = descripcion;
   if (casaId) tarea.casaId = casaId;
   if (fechaLimite !== undefined) tarea.fechaLimite = fechaLimite;
+  if (tipo) tarea.tipo = tipo;
   res.json({ message: 'Tarea actualizada', tarea });
 };
 
