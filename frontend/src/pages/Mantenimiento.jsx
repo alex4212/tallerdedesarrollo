@@ -4,10 +4,12 @@ import { RefreshCw, CheckCircle } from 'lucide-react';
 
 export default function Mantenimiento() {
   const [tareas, setTareas] = useState([]);
+  const [casas, setCasas] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [casaId, setCasaId] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [editandoTarea, setEditandoTarea] = useState(null);
 
   const cargarTareas = async () => {
     setLoading(true);
@@ -21,23 +23,54 @@ export default function Mantenimiento() {
     }
   };
 
+  const cargarCasas = async () => {
+    try {
+      const data = await fetchAPI('/acogida/casas');
+      setCasas(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     cargarTareas();
+    cargarCasas();
   }, []);
 
-  const crearTarea = async (e) => {
+  const guardarTarea = async (e) => {
     e.preventDefault();
+    if (!casaId) return alert('Selecciona una casa');
     try {
-      await fetchAPI('/mantenimiento/tareas', {
-        method: 'POST',
-        body: JSON.stringify({ casaId: Number(casaId), descripcion })
-      });
+      if (editandoTarea) {
+        await fetchAPI(`/mantenimiento/tareas/${editandoTarea.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite: editandoTarea.fechaLimite })
+        });
+        setEditandoTarea(null);
+      } else {
+        await fetchAPI('/mantenimiento/tareas', {
+          method: 'POST',
+          body: JSON.stringify({ casaId: Number(casaId), descripcion })
+        });
+      }
       setCasaId('');
       setDescripcion('');
       cargarTareas();
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const iniciarEdicion = (t) => {
+    setEditandoTarea(t);
+    setCasaId(t.casaId);
+    setDescripcion(t.descripcion);
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoTarea(null);
+    setCasaId('');
+    setDescripcion('');
   };
 
   const marcarCompletada = async (id) => {
@@ -61,21 +94,6 @@ export default function Mantenimiento() {
       alert(err.message);
     }
   };
-
-  const actualizarTarea = async (t) => {
-    const nuevaDesc = window.prompt('Nueva descripción:', t.descripcion);
-    if (!nuevaDesc || nuevaDesc === t.descripcion) return;
-    try {
-      await fetchAPI(`/mantenimiento/tareas/${t.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ descripcion: nuevaDesc, casaId: t.casaId, fechaLimite: t.fechaLimite })
-      });
-      cargarTareas();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   return (
     <div className="page-fade-in">
       <div className="glass-card header-card mb-6">
@@ -84,15 +102,22 @@ export default function Mantenimiento() {
       </div>
 
       <div className="glass-card mb-6">
-        <h3>Crear Nueva Tarea</h3>
-        <form onSubmit={crearTarea} className="inline-form mt-4">
-          <input 
-            type="number" 
-            placeholder="ID Casa (Ej. 1)" 
+        <h3>{editandoTarea ? 'Editar Tarea' : 'Crear Nueva Tarea'}</h3>
+        <form onSubmit={guardarTarea} className="inline-form mt-4">
+          <select 
             value={casaId} 
             onChange={e => setCasaId(e.target.value)} 
-            required 
-          />
+            required
+            className="input-select"
+            style={{ minWidth: '200px', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+          >
+            <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Seleccionar Casa --</option>
+            {casas.map(c => (
+              <option key={c.id} value={c.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
           <input 
             type="text" 
             placeholder="Descripción de la tarea" 
@@ -100,7 +125,14 @@ export default function Mantenimiento() {
             onChange={e => setDescripcion(e.target.value)} 
             required 
           />
-          <button type="submit" className="btn-primary">Asignar Tarea</button>
+          <button type="submit" className="btn-primary" style={{ width: 'auto' }}>
+            {editandoTarea ? 'Guardar Cambios' : 'Asignar Tarea'}
+          </button>
+          {editandoTarea && (
+            <button type="button" className="btn-secondary" onClick={cancelarEdicion}>
+              Cancelar
+            </button>
+          )}
         </form>
       </div>
 
@@ -126,7 +158,7 @@ export default function Mantenimiento() {
                     <CheckCircle size={24} />
                   </button>
                 )}
-                <button onClick={() => actualizarTarea(t)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem'}}>
+                <button onClick={() => iniciarEdicion(t)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem'}}>
                   Actualizar
                 </button>
                 <button onClick={() => eliminarTarea(t.id)} className="btn-secondary" style={{padding: '4px 8px', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)'}}>

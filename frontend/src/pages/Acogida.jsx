@@ -136,9 +136,9 @@ export default function Acogida() {
                 required
                 style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
               >
-                <option value="" style={{ color: 'black' }}>-- Elige un menor --</option>
+                <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige un menor --</option>
                 {menores.map(m => (
-                  <option key={m.id} value={m.id} style={{ color: 'black' }}>
+                  <option key={m.id} value={m.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
                     {m.nombre} (Actual: {m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'})
                   </option>
                 ))}
@@ -153,9 +153,9 @@ export default function Acogida() {
                 required
                 style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
               >
-                <option value="" style={{ color: 'black' }}>-- Elige una casa --</option>
+                <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige una casa --</option>
                 {casas.map(c => (
-                  <option key={c.id} value={c.id} style={{ color: 'black' }} disabled={c.ocupacionActual >= c.capacidad}>
+                  <option key={c.id} value={c.id} style={{ background: 'var(--bg-color)', color: 'white' }} disabled={c.ocupacionActual >= c.capacidad}>
                     {c.nombre} ({c.ocupacionActual}/{c.capacidad} ocupados)
                   </option>
                 ))}
