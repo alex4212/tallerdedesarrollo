@@ -29,6 +29,9 @@ jobs:
           setsid pm2 restart api-backend || setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name "api-backend"
           pm2 save
 
+      - name: Inyectar variables de entorno Frontend
+        run: cp ~/frontend.env ./frontend/.env.production
+
       - name: Instalar y construir Frontend
         run: |
           source ~/.nvm/nvm.sh
