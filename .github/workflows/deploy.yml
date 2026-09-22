@@ -20,7 +20,7 @@ jobs:
           npm install
 
       - name: Inyectar variables de entorno Backend
-        run: cp ~/backend.env ./backend/src/.env
+        run: cp ~/backend.env ./backend/.env
 
       - name: Reiniciar Backend con PM2
         run: |
