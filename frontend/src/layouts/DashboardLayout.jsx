@@ -5,6 +5,7 @@ import { Users, Wrench, Wallet, LogOut } from 'lucide-react';
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  
   let user = {};
   try {
     const userStr = localStorage.getItem('user');
@@ -12,7 +13,7 @@ export default function DashboardLayout() {
       user = JSON.parse(userStr);
     }
   } catch (e) {
-    console.error('Error parsing user', e);
+    console.warn("Error leyendo el usuario, reiniciando sesión");
   }
 
   const handleLogout = () => {
