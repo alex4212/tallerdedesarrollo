@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const indexRoutes = require('./routes/index.routes');
 const acogidaRoutes = require('./routes/acogida.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -18,8 +19,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 
-app.use((req, res, next) => {
-  res.status(404).json({ message: 'Not found' });
+// Servir archivos estáticos del frontend (React)
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Cualquier otra ruta que no empiece con /api devuelve el index.html de React
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'Ruta de API no encontrada' });
+  }
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 app.use((err, req, res, next) => {
