@@ -5,7 +5,15 @@ import { Users, Wrench, Wallet, LogOut } from 'lucide-react';
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  let user = {};
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr && userStr !== 'undefined') {
+      user = JSON.parse(userStr);
+    }
+  } catch (e) {
+    console.error('Error parsing user', e);
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token');
