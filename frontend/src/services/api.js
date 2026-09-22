@@ -14,10 +14,16 @@ export const fetchAPI = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json().catch(() => ({}));
+  let data;
+  try {
+    const text = await response.text();
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    throw new Error(`Error de conexión: El servidor no devolvió datos válidos. Revisa que VITE_API_URL apunte al puerto correcto del backend.`);
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Error en la petición al servidor');
+    throw new Error(data?.message || 'Error en la petición al servidor');
   }
 
   return data;
