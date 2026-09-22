@@ -20,7 +20,7 @@ app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 
 // Servir los archivos estáticos del frontend en producción
-const frontendPath = path.join(__dirname, '../../../frontend/dist');
+const frontendPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendPath));
 
 // Cualquier ruta que no empiece con /api, se la pasamos al Frontend (React)
