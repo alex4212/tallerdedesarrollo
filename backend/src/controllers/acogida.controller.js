@@ -34,7 +34,7 @@ const ingresarMenor = async (req, res) => {
 
 const asignarCasa = async (req, res) => {
   const { menorId } = req.params;
-  const { casaId } = req.body;
+  const { casaId, fechaIngresoCasa } = req.body;
 
   try {
     const client = await pool.connect();
@@ -57,14 +57,15 @@ const asignarCasa = async (req, res) => {
         await client.query('UPDATE casas SET ocupacion_actual = ocupacion_actual - 1 WHERE id = $1', [menor.casa_asignada_id]);
       }
 
-      await client.query('UPDATE menores SET casa_asignada_id = $1, estado = $2 WHERE id = $3', [casa.id, 'Asignado a Casa', menor.id]);
+      const fechaToUse = fechaIngresoCasa || new Date().toISOString();
+      await client.query('UPDATE menores SET casa_asignada_id = $1, estado = $2, fecha_ingreso_casa = $3 WHERE id = $4', [casa.id, 'Asignado a Casa', fechaToUse, menor.id]);
       await client.query('UPDATE casas SET ocupacion_actual = ocupacion_actual + 1 WHERE id = $1', [casa.id]);
 
       await client.query('COMMIT');
       
       res.json({
         message: 'Casa asignada exitosamente',
-        menor: { ...menor, casaAsignadaId: casa.id, estado: 'Asignado a Casa' },
+        menor: { ...menor, casaAsignadaId: casa.id, estado: 'Asignado a Casa', fechaIngresoCasa: fechaToUse },
         casa: { id: casa.id, nombre: casa.nombre, ocupacionActual: casa.ocupacion_actual + 1 }
       });
     } catch (e) {

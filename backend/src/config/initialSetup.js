@@ -37,7 +37,22 @@ const setupDatabase = async () => {
         folio_legal VARCHAR(100) NOT NULL,
         fecha_ingreso TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         casa_asignada_id INT REFERENCES casas(id) NULL,
-        estado VARCHAR(50) DEFAULT 'Ingresado'
+        estado VARCHAR(50) DEFAULT 'Ingresado',
+        fecha_ingreso_casa TIMESTAMP NULL
+      );
+    `);
+
+    await pool.query(`ALTER TABLE menores ADD COLUMN IF NOT EXISTS fecha_ingreso_casa TIMESTAMP;`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS gastos (
+        id SERIAL PRIMARY KEY,
+        casa_id INT REFERENCES casas(id),
+        monto NUMERIC NOT NULL,
+        descripcion TEXT NOT NULL,
+        url_boleta TEXT,
+        estado VARCHAR(50) DEFAULT 'PENDIENTE',
+        fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -52,12 +67,10 @@ const setupDatabase = async () => {
         (4, 'Casa 4', 5, 0),
         (5, 'Casa 5', 5, 0);
       `);
-      // Ajustar secuencia
       await pool.query("SELECT setval('casas_id_seq', (SELECT MAX(id) FROM casas));");
       console.log('>>> Casas por defecto creadas');
     }
 
-    // Insertar educadoras por defecto si no existen
     const educadorasCount = await pool.query('SELECT COUNT(*) FROM educadoras');
     if (parseInt(educadorasCount.rows[0].count) === 0) {
       await pool.query(`
@@ -71,7 +84,7 @@ const setupDatabase = async () => {
       await pool.query("SELECT setval('educadoras_id_seq', (SELECT MAX(id) FROM educadoras));");
       console.log('>>> Educadoras por defecto creadas');
     }
-    
+
     console.log('>>> Tablas de acogida inicializadas correctamente');
   } catch (error) {
     console.error('Error inicializando las tablas:', error);

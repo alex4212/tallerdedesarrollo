@@ -1,5 +1,4 @@
-// Middleware simulado para el avance
-// En un entorno real, aquí se usaría jsonwebtoken (jwt.verify)
+
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -10,7 +9,6 @@ const verifyToken = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
-  // Simulación: Si es nuestro token de prueba, asimilamos que es la jefa
   if (token === 'simulated-jwt-token-12345') {
     req.user = {
       id: 1,
@@ -19,7 +17,6 @@ const verifyToken = (req, res, next) => {
     };
     next();
   } else {
-    // Para probar otros roles más adelante, podríamos aceptar otros tokens simulados
     return res.status(403).json({ message: 'Token inválido' });
   }
 };

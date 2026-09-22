@@ -15,6 +15,7 @@ export default function Acogida() {
 
   const [menorSeleccionado, setMenorSeleccionado] = useState('');
   const [casaSeleccionada, setCasaSeleccionada] = useState('');
+  const [fechaIngresoCasa, setFechaIngresoCasa] = useState('');
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -62,10 +63,11 @@ export default function Acogida() {
     try {
       await fetchAPI(`/acogida/menores/${menorSeleccionado}/asignar-casa`, {
         method: 'POST',
-        body: JSON.stringify({ casaId: casaSeleccionada })
+        body: JSON.stringify({ casaId: casaSeleccionada, fechaIngresoCasa })
       });
       setMenorSeleccionado('');
       setCasaSeleccionada('');
+      setFechaIngresoCasa('');
       cargarDatos();
       alert('Casa asignada exitosamente');
     } catch (err) {
@@ -185,6 +187,16 @@ export default function Acogida() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="input-group">
+                <label>Fecha y Hora de Ingreso</label>
+                <input 
+                  type="datetime-local" 
+                  value={fechaIngresoCasa} 
+                  onChange={e => setFechaIngresoCasa(e.target.value)} 
+                  required
+                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+                />
               </div>
             </div>
             <button type="submit" className="btn-primary" style={{ marginTop: 'auto' }}>Asignar Casa</button>
