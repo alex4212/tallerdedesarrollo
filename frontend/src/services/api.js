@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const fetchAPI = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
@@ -14,16 +14,10 @@ export const fetchAPI = async (endpoint, options = {}) => {
     headers,
   });
 
-  let data;
-  try {
-    const text = await response.text();
-    data = text ? JSON.parse(text) : {};
-  } catch (e) {
-    throw new Error(`Error de conexión: El servidor no devolvió datos válidos. Revisa que VITE_API_URL apunte al puerto correcto del backend.`);
-  }
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data?.message || 'Error en la petición al servidor');
+    throw new Error(data.message || 'Error en la petición al servidor');
   }
 
   return data;
