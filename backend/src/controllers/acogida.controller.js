@@ -1,22 +1,6 @@
-let menores = [];
-let casas = [
-  { id: 1, nombre: 'Casa 1', capacidad: 5, ocupacionActual: 0 },
-  { id: 2, nombre: 'Casa 2', capacidad: 5, ocupacionActual: 0 },
-  { id: 3, nombre: 'Casa 3', capacidad: 5, ocupacionActual: 0 },
-  { id: 4, nombre: 'Casa 4', capacidad: 5, ocupacionActual: 0 },
-  { id: 5, nombre: 'Casa 5', capacidad: 5, ocupacionActual: 0 }
-];
+const { pool } = require('../config/configDb');
 
-let educadoras = [
-  { id: 1, nombre: 'María Pérez', rol: 'Encargada de Casa', casaId: 1 },
-  { id: 2, nombre: 'Carmen Rojas', rol: 'Encargada de Casa', casaId: 2 },
-  { id: 3, nombre: 'Lucía Gómez', rol: 'Encargada de Casa', casaId: 3 },
-  { id: 4, nombre: 'Ana Soto', rol: 'Encargada de Casa', casaId: 4 },
-  { id: 5, nombre: 'Rosa Díaz', rol: 'Encargada de Casa', casaId: 5 }
-];
-
-
-const ingresarMenor = (req, res) => {
+const ingresarMenor = async (req, res) => {
   const { nombre, edad, folioLegal, rut, fechaIngreso } = req.body;
 
   if (!nombre || !folioLegal || !rut || edad === undefined) {
@@ -27,84 +11,122 @@ const ingresarMenor = (req, res) => {
     return res.status(400).json({ message: 'El ingresado debe ser menor de edad (menor a 18 años)' });
   }
 
-  const nuevoMenor = {
-    id: menores.length + 1,
-    nombre,
-    rut,
-    edad: Number(edad),
-    folioLegal,
-    fechaIngreso: fechaIngreso || new Date().toISOString(),
-    casaAsignadaId: null,
-    estado: 'Ingresado'
-  };
-
-  menores.push(nuevoMenor);
-
-  res.status(201).json({
-    message: 'Menor ingresado exitosamente al sistema',
-    menor: nuevoMenor
-  });
+  try {
+    const query = `
+      INSERT INTO menores (nombre, rut, edad, folio_legal, fecha_ingreso, estado)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *, id, casa_asignada_id AS "casaAsignadaId", folio_legal AS "folioLegal"
+    `;
+    const values = [nombre, rut, Number(edad), folioLegal, fechaIngreso || new Date().toISOString(), 'Ingresado'];
+    
+    const result = await pool.query(query, values);
+    
+    res.status(201).json({
+      message: 'Menor ingresado exitosamente al sistema',
+      menor: result.rows[0]
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor al ingresar menor' });
+  }
 };
 
 
-const asignarCasa = (req, res) => {
+const asignarCasa = async (req, res) => {
   const { menorId } = req.params;
   const { casaId } = req.body;
 
-  const menor = menores.find(m => m.id === parseInt(menorId));
-  const casa = casas.find(h => h.id === parseInt(casaId));
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const menorRes = await client.query('SELECT * FROM menores WHERE id = $1', [parseInt(menorId)]);
+      if (menorRes.rows.length === 0) throw new Error('Menor no encontrado');
+      const menor = menorRes.rows[0];
 
-  if (!menor) return res.status(404).json({ message: 'Menor no encontrado' });
-  if (!casa) return res.status(404).json({ message: 'Casa no encontrada' });
+      const casaRes = await client.query('SELECT * FROM casas WHERE id = $1', [parseInt(casaId)]);
+      if (casaRes.rows.length === 0) throw new Error('Casa no encontrada');
+      const casa = casaRes.rows[0];
 
-  if (casa.ocupacionActual >= casa.capacidad) {
-    return res.status(400).json({ message: 'La casa ha alcanzado su capacidad máxima' });
+      if (casa.ocupacion_actual >= casa.capacidad) {
+        throw new Error('La casa ha alcanzado su capacidad máxima');
+      }
+
+      if (menor.casa_asignada_id) {
+        await client.query('UPDATE casas SET ocupacion_actual = ocupacion_actual - 1 WHERE id = $1', [menor.casa_asignada_id]);
+      }
+
+      await client.query('UPDATE menores SET casa_asignada_id = $1, estado = $2 WHERE id = $3', [casa.id, 'Asignado a Casa', menor.id]);
+      await client.query('UPDATE casas SET ocupacion_actual = ocupacion_actual + 1 WHERE id = $1', [casa.id]);
+
+      await client.query('COMMIT');
+      
+      res.json({
+        message: 'Casa asignada exitosamente',
+        menor: { ...menor, casaAsignadaId: casa.id, estado: 'Asignado a Casa' },
+        casa: { id: casa.id, nombre: casa.nombre, ocupacionActual: casa.ocupacion_actual + 1 }
+      });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      res.status(400).json({ message: e.message });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor al asignar casa' });
   }
-
-  if (menor.casaAsignadaId) {
-    const casaAntigua = casas.find(h => h.id === menor.casaAsignadaId);
-    if (casaAntigua) casaAntigua.ocupacionActual--;
-  }
-
-  menor.casaAsignadaId = casa.id;
-  menor.estado = 'Asignado a Casa';
-  casa.ocupacionActual++;
-
-  res.json({
-    message: 'Casa asignada exitosamente',
-    menor,
-    casa: { id: casa.id, nombre: casa.nombre, ocupacionActual: casa.ocupacionActual }
-  });
 };
 
 
-const obtenerEducadorasTurnoActivo = (req, res) => {
-  const educadorasActivas = educadoras.map(e => {
-      const casaAsignada = casas.find(h => h.id === e.casaId);
-      return {
-        id: e.id,
-        nombre: e.nombre,
-        casa: casaAsignada ? casaAsignada.nombre : 'Sin asignar'
-      };
+const obtenerEducadorasTurnoActivo = async (req, res) => {
+  try {
+    const query = `
+      SELECT e.id, e.nombre, COALESCE(c.nombre, 'Sin asignar') AS casa
+      FROM educadoras e
+      LEFT JOIN casas c ON e.casa_id = c.id
+    `;
+    const result = await pool.query(query);
+    res.json({
+      message: 'Educadoras en turno activo',
+      educadorasActivas: result.rows
     });
-
-  res.json({
-    message: 'Educadoras en turno activo',
-    educadorasActivas
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
 };
 
 
-const obtenerMenores = (req, res) => {
-  res.json(menores);
+const obtenerMenores = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT *, casa_asignada_id AS "casaAsignadaId", folio_legal AS "folioLegal" FROM menores ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
 };
 
-const obtenerCasas = (req, res) => {
-  res.json(casas);
+const obtenerCasas = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT *, ocupacion_actual AS "ocupacionActual" FROM casas ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
 };
 
-const obtenerEducadoras = (req, res) => {
-  res.json(educadoras);
+const obtenerEducadoras = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT *, casa_id AS "casaId" FROM educadoras ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
 };
 
 module.exports = {

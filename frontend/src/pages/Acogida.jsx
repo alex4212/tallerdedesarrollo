@@ -137,7 +137,7 @@ export default function Acogida() {
               </div>
               <div className="input-group">
                 <label>Edad</label>
-                <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required />
+                <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required max="18" />
               </div>
               <div className="input-group">
                 <label>Orden de Tribunal (Folio)</label>
@@ -164,7 +164,7 @@ export default function Acogida() {
                   <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige un menor --</option>
                   {menores.map(m => (
                     <option key={m.id} value={m.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
-                      {m.nombre} - {m.rut || 'Sin RUT'} (Actual: {m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'})
+                      {m.nombre}
                     </option>
                   ))}
                 </select>

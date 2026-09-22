@@ -10,6 +10,7 @@ export default function Mantenimiento() {
   const [casaId, setCasaId] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState('CORRECTIVO');
+  const [fechaLimite, setFechaLimite] = useState('');
   const [editandoTarea, setEditandoTarea] = useState(null);
 
   const cargarTareas = async () => {
@@ -45,18 +46,19 @@ export default function Mantenimiento() {
       if (editandoTarea) {
         await fetchAPI(`/mantenimiento/tareas/${editandoTarea.id}`, {
           method: 'PUT',
-          body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite: editandoTarea.fechaLimite, tipo })
+          body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite, tipo })
         });
         setEditandoTarea(null);
       } else {
         await fetchAPI('/mantenimiento/tareas', {
           method: 'POST',
-          body: JSON.stringify({ casaId: Number(casaId), descripcion, tipo })
+          body: JSON.stringify({ casaId: Number(casaId), descripcion, tipo, fechaLimite })
         });
       }
       setCasaId('');
       setDescripcion('');
       setTipo('CORRECTIVO');
+      setFechaLimite('');
       cargarTareas();
     } catch (err) {
       alert(err.message);
@@ -68,6 +70,7 @@ export default function Mantenimiento() {
     setCasaId(t.casaId);
     setDescripcion(t.descripcion);
     setTipo(t.tipo || 'CORRECTIVO');
+    setFechaLimite(t.fechaLimite || '');
   };
 
   const cancelarEdicion = () => {
@@ -75,6 +78,7 @@ export default function Mantenimiento() {
     setCasaId('');
     setDescripcion('');
     setTipo('CORRECTIVO');
+    setFechaLimite('');
   };
 
   const marcarCompletada = async (id) => {
@@ -129,9 +133,17 @@ export default function Mantenimiento() {
             className="input-select"
             style={{ minWidth: '150px', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
           >
-            <option value="CORRECTIVO" style={{ background: 'var(--bg-color)', color: 'white' }}>Correctivo</option>
+            <option value="CORRECTIVO" style={{ background: 'var(--bg-color)', color: 'white' }}>Orden correctivo</option>
             <option value="PREVENTIVO" style={{ background: 'var(--bg-color)', color: 'white' }}>Preventivo</option>
           </select>
+          <input 
+            type="date"
+            value={fechaLimite}
+            onChange={e => setFechaLimite(e.target.value)}
+            required
+            min={new Date().toISOString().split('T')[0]}
+            style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
+          />
           <input 
             type="text" 
             placeholder="Descripción de la tarea"  
@@ -140,7 +152,7 @@ export default function Mantenimiento() {
             required 
           />
           <button type="submit" className="btn-primary" style={{ width: 'auto' }}>
-            {editandoTarea ? 'Guardar Cambios' : 'Asignar Tarea'}
+            {editandoTarea ? 'Actualizar' : 'Crear Nuevo'}
           </button>
           {editandoTarea && (
             <button type="button" className="btn-secondary" onClick={cancelarEdicion}>
