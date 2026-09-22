@@ -15,7 +15,6 @@ export default function Acogida() {
 
   const [menorSeleccionado, setMenorSeleccionado] = useState('');
   const [casaSeleccionada, setCasaSeleccionada] = useState('');
-  const [fechaIngresoCasa, setFechaIngresoCasa] = useState('');
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -25,9 +24,9 @@ export default function Acogida() {
         fetchAPI('/acogida/casas'),
         fetchAPI('/acogida/educadoras')
       ]);
-      setMenores(Array.isArray(dataMenores) ? dataMenores : []);
-      setCasas(Array.isArray(dataCasas) ? dataCasas : []);
-      setEducadoras(Array.isArray(dataEducadoras) ? dataEducadoras : []);
+      setMenores(dataMenores);
+      setCasas(dataCasas);
+      setEducadoras(dataEducadoras);
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,11 +62,10 @@ export default function Acogida() {
     try {
       await fetchAPI(`/acogida/menores/${menorSeleccionado}/asignar-casa`, {
         method: 'POST',
-        body: JSON.stringify({ casaId: casaSeleccionada, fechaIngresoCasa })
+        body: JSON.stringify({ casaId: casaSeleccionada })
       });
       setMenorSeleccionado('');
       setCasaSeleccionada('');
-      setFechaIngresoCasa('');
       cargarDatos();
       alert('Casa asignada exitosamente');
     } catch (err) {
@@ -89,7 +87,7 @@ export default function Acogida() {
             <RefreshCw size={16} className={loading ? 'spin' : ''} /> Actualizar
           </button>
         </div>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
           {casas.map(casa => {
             const encargada = educadoras.find(e => e.casaId === casa.id);
@@ -102,7 +100,7 @@ export default function Acogida() {
                 <div className={`badge ${estaLlena ? 'rechazado' : 'aprobado'}`}>
                   {casa.ocupacionActual} / {casa.capacidad} Niños
                 </div>
-                
+
                 <div className="house-details-overlay">
                   <h4 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '0.9rem' }}>Menores Asignados</h4>
                   <ul className="house-details-list">
@@ -126,7 +124,7 @@ export default function Acogida() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'stretch' }} className="mb-6">
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <h3 className="mb-4 flex-align-center gap-2"><UserPlus size={20}/> Registrar Nuevo Ingreso</h3>
+          <h3 className="mb-4 flex-align-center gap-2"><UserPlus size={20} /> Registrar Nuevo Ingreso</h3>
           <form onSubmit={registrarMenor} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <div style={{ flex: 1 }}>
               <div className="input-group">
@@ -139,7 +137,7 @@ export default function Acogida() {
               </div>
               <div className="input-group">
                 <label>Edad</label>
-                <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required max="18" />
+                <input type="number" value={edad} onChange={e => setEdad(e.target.value)} required />
               </div>
               <div className="input-group">
                 <label>Orden de Tribunal (Folio)</label>
@@ -151,32 +149,32 @@ export default function Acogida() {
         </div>
 
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <h3 className="mb-4 flex-align-center gap-2"><Home size={20}/> Asignar a Casa</h3>
+          <h3 className="mb-4 flex-align-center gap-2"><Home size={20} /> Asignar a Casa</h3>
           <form onSubmit={asignarCasa} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <div style={{ flex: 1 }}>
               <div className="input-group">
                 <label>Seleccionar Menor</label>
-                <select 
+                <select
                   className="input-select"
-                  value={menorSeleccionado} 
-                  onChange={e => setMenorSeleccionado(e.target.value)} 
+                  value={menorSeleccionado}
+                  onChange={e => setMenorSeleccionado(e.target.value)}
                   required
                   style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
                 >
                   <option value="" style={{ background: 'var(--bg-color)', color: 'white' }}>-- Elige un menor --</option>
                   {menores.map(m => (
                     <option key={m.id} value={m.id} style={{ background: 'var(--bg-color)', color: 'white' }}>
-                      {m.nombre}
+                      {m.nombre} - {m.rut || 'Sin RUT'} (Actual: {m.casaAsignadaId ? `Casa ${m.casaAsignadaId}` : 'Sin asignar'})
                     </option>
                   ))}
                 </select>
               </div>
               <div className="input-group">
                 <label>Seleccionar Casa</label>
-                <select 
+                <select
                   className="input-select"
-                  value={casaSeleccionada} 
-                  onChange={e => setCasaSeleccionada(e.target.value)} 
+                  value={casaSeleccionada}
+                  onChange={e => setCasaSeleccionada(e.target.value)}
                   required
                   style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
                 >
@@ -187,16 +185,6 @@ export default function Acogida() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="input-group">
-                <label>Fecha y Hora de Ingreso</label>
-                <input 
-                  type="datetime-local" 
-                  value={fechaIngresoCasa} 
-                  onChange={e => setFechaIngresoCasa(e.target.value)} 
-                  required
-                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '12px', outline: 'none' }}
-                />
               </div>
             </div>
             <button type="submit" className="btn-primary" style={{ marginTop: 'auto' }}>Asignar Casa</button>
