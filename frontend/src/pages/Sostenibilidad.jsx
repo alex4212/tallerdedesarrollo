@@ -17,7 +17,7 @@ export default function Sostenibilidad() {
     setLoading(true);
     try {
       const data = await fetchAPI('/sostenibilidad/gastos');
-      setGastos(data);
+      setGastos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -28,7 +28,7 @@ export default function Sostenibilidad() {
   const cargarCasas = async () => {
     try {
       const data = await fetchAPI('/acogida/casas');
-      setCasas(data);
+      setCasas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }

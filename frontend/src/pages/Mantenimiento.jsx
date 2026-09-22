@@ -17,7 +17,7 @@ export default function Mantenimiento() {
     setLoading(true);
     try {
       const data = await fetchAPI('/mantenimiento/tareas');
-      setTareas(data);
+      setTareas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -28,7 +28,7 @@ export default function Mantenimiento() {
   const cargarCasas = async () => {
     try {
       const data = await fetchAPI('/acogida/casas');
-      setCasas(data);
+      setCasas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }

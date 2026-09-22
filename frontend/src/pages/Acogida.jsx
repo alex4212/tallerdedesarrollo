@@ -25,9 +25,9 @@ export default function Acogida() {
         fetchAPI('/acogida/casas'),
         fetchAPI('/acogida/educadoras')
       ]);
-      setMenores(dataMenores);
-      setCasas(dataCasas);
-      setEducadoras(dataEducadoras);
+      setMenores(Array.isArray(dataMenores) ? dataMenores : []);
+      setCasas(Array.isArray(dataCasas) ? dataCasas : []);
+      setEducadoras(Array.isArray(dataEducadoras) ? dataEducadoras : []);
     } catch (err) {
       console.error(err);
     } finally {
