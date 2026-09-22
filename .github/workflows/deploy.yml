@@ -39,10 +39,10 @@ jobs:
           npm install
           npm run build
 
-      - name: Desplegar Frontend con PM2
+      - name: Limpiar procesos antiguos de PM2
         run: |
           source ~/.nvm/nvm.sh
-          cd frontend
-          setsid pm2 restart api-frontend || setsid pm2 serve dist 80 --name "api-frontend" --spa
+          pm2 delete api-frontend || true
           pm2 save
+
     
