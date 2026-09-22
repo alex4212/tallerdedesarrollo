@@ -40,6 +40,6 @@ jobs:
         run: |
           source ~/.nvm/nvm.sh
           cd frontend
-          setsid pm2 restart api-frontend || setsid pm2 serve dist 1626 --name "api-frontend" --spa
+          setsid pm2 restart api-frontend || setsid pm2 serve dist 80 --name "api-frontend" --spa
           pm2 save
     
