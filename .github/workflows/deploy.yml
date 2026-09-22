@@ -19,19 +19,6 @@ jobs:
           cd backend
           npm install
 
-      - name: Inyectar variables de entorno Backend
-        run: cp ~/backend.env ./backend/.env
-
-      - name: Reiniciar Backend con PM2
-        run: |
-          source ~/.nvm/nvm.sh
-          cd backend
-          setsid pm2 restart api-backend || setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name "api-backend"
-          pm2 save
-
-      - name: Inyectar variables de entorno Frontend
-        run: cp ~/frontend.env ./frontend/.env.production
-
       - name: Instalar y construir Frontend
         run: |
           source ~/.nvm/nvm.sh
@@ -39,10 +26,20 @@ jobs:
           npm install
           npm run build
 
-      - name: Limpiar procesos antiguos de PM2
+      - name: Limpiar procesos antiguos de PM2 (liberar el puerto)
         run: |
           source ~/.nvm/nvm.sh
           pm2 delete api-frontend || true
+          pm2 save
+
+      - name: Inyectar variables de entorno Backend
+        run: cp ~/backend.env ./backend/.env
+
+      - name: Iniciar Backend unificado con PM2
+        run: |
+          source ~/.nvm/nvm.sh
+          cd backend
+          PORT=80 setsid pm2 restart api-backend --update-env || PORT=80 setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name "api-backend"
           pm2 save
 
     
