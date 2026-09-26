@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const indexRoutes = require('./routes/index.routes');
 const acogidaRoutes = require('./routes/acogida.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -8,7 +9,10 @@ const mantenimientoRoutes = require('./routes/mantenimiento.routes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://146.83.198.35:1626',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -18,8 +22,19 @@ app.use('/api/auth', authRoutes);
 app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 
-app.use((req, res, next) => {
-  res.status(404).json({ message: 'Not found' });
+// Servir estáticos del frontend si existen
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ message: 'Not found' });
+  }
+  res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+    if (err) {
+      res.status(404).json({ message: 'Frontend dist not found' });
+    }
+  });
 });
 
 app.use((err, req, res, next) => {
@@ -28,3 +43,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+

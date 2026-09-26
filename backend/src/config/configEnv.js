@@ -1,7 +1,6 @@
 const path = require('path');
 
-// Carga solo UN .env para evitar que un segundo archivo sobreescriba valores
-// silenciosamente. Ajusta la ruta según dónde tengas tu .env real.
+require('dotenv').config();
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 
 const readEnv = (key, fallback = "") => {
@@ -10,12 +9,12 @@ const readEnv = (key, fallback = "") => {
   return fallback;
 };
 
-const PORT = parseInt(readEnv("PORT", "5433"), 10);
-const HOST = readEnv("HOST", "localhost");
-const DB_USERNAME = readEnv("DB_USERNAME", "postgres");
-const DB_PASSWORD = readEnv("DB_PASSWORD", "alex123");
-const DB_DATABASE = readEnv("DB_DATABASE", "proyectotaller");
-const DB_PORT = parseInt(readEnv("DB_PORT", "5432"), 10);
+const PORT = parseInt(readEnv("PORT"), 10);
+const HOST = readEnv("HOST");
+const DB_USERNAME = readEnv("DB_USERNAME");
+const DB_PASSWORD = readEnv("DB_PASSWORD");
+const DB_DATABASE = readEnv("DB_DATABASE");
+const DB_PORT = parseInt(readEnv("DB_PORT"), 10);
 
 const DATABASE_URL =
   readEnv("DATABASE_URL") ||

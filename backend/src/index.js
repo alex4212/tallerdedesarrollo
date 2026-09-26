@@ -3,7 +3,7 @@ const app = require('./app');
 const { connectDB } = require('./config/configDb');
 const { setupDatabase } = require('./config/initialSetup');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 
 connectDB().then(async () => {
   await setupDatabase();
