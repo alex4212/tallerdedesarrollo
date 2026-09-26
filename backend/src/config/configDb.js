@@ -12,7 +12,7 @@ const connectDB = async () => {
     client.release();
   } catch (error) {
     console.error('Error conectando a la base de datos PostgreSQL:', error.message);
-    process.exit(1);
+    throw error;
   }
 };
 
