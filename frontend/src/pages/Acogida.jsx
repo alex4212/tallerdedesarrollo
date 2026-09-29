@@ -344,7 +344,6 @@ export default function Acogida() {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>RUT</th>
                 <th>Nombre</th>
                 <th>Folio Legal</th>
@@ -355,20 +354,19 @@ export default function Acogida() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center">
+                  <td colSpan="5" className="text-center">
                     Cargando...
                   </td>
                 </tr>
               ) : menores.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center">
+                  <td colSpan="5" className="text-center">
                     No hay menores registrados.
                   </td>
                 </tr>
               ) : (
                 menores.map((m) => (
                   <tr key={m.id}>
-                    <td>#{m.id}</td>
                     <td>{m.rut || "N/A"}</td>
                     <td>{m.nombre}</td>
                     <td>{m.folioLegal}</td>
