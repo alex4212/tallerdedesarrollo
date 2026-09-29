@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,26 +15,41 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inyectar variables de entorno Frontend
-        run: cp ~/frontend.env ./frontend/.env.production
+        run: |
+          if [ -f ~/frontend.env ]; then
+            cp ~/frontend.env ./frontend/.env.production
+          else
+            echo "Advertencia: ~/frontend.env no existe en el home del runner"
+          fi
 
       - name: Instalar y construir Frontend
         run: |
-          source ~/.nvm/nvm.sh
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           cd frontend
           npm install
           npm run build
 
       - name: Instalar dependencias del Backend
         run: |
-          source ~/.nvm/nvm.sh
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           cd backend
           npm install
 
       - name: Inyectar variables de entorno Backend
-        run: cp ~/backend.env ./backend/src/config/.env
+        run: |
+          mkdir -p ./backend/src/config
+          if [ -f ~/backend.env ]; then
+            cp ~/backend.env ./backend/src/config/.env
+          else
+            echo "Advertencia: ~/backend.env no existe en el home del runner"
+          fi
 
       - name: Reiniciar Backend con PM2
         run: |
-          source ~/.nvm/nvm.sh
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           setsid pm2 restart api-backend || setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name "api-backend"
-          pm2 save
+          pm2 save
+

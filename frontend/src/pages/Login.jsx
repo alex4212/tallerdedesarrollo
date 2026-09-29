@@ -4,8 +4,8 @@ import { fetchAPI } from '../services/api';
 import { LogIn } from 'lucide-react';
 
 export default function Login() {
-  const [email, setEmail] = useState('Ivresse.jorquera@aldeasinfantiles.cl');
-  const [password, setPassword] = useState('Ivresse Jorquera');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
