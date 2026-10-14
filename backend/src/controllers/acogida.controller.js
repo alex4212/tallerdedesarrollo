@@ -17,7 +17,7 @@ const ingresarMenor = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *, id, casa_asignada_id AS "casaAsignadaId", folio_legal AS "folioLegal"
     `;
-    const values = [nombre, rut, Number(edad), folioLegal, fechaIngreso || new Date().toISOString(), 'Ingresado'];
+    const values = [nombre, rut, Number(edad), folioLegal, fechaIngreso || new Date().toISOString(), 'Sin asignar'];
     
     const result = await pool.query(query, values);
     

@@ -31,6 +31,7 @@ export default function Acogida() {
 
   const [menorSeleccionado, setMenorSeleccionado] = useState("");
   const [casaSeleccionada, setCasaSeleccionada] = useState("");
+  const [asignandoId, setAsignandoId] = useState(null);
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -94,6 +95,22 @@ export default function Acogida() {
       alert("Casa asignada exitosamente");
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleAsignarCasaFila = async (menor, casaId) => {
+    if (!casaId) return;
+    try {
+      setAsignandoId(menor.id);
+      await fetchAPI(`/acogida/menores/${menor.id}/asignar-casa`, {
+        method: "POST",
+        body: JSON.stringify({ casaId: Number(casaId) }),
+      });
+      await cargarDatos();
+    } catch (err) {
+      alert(err.message || "Error al asignar casa");
+    } finally {
+      setAsignandoId(null);
     }
   };
 
@@ -382,25 +399,60 @@ export default function Acogida() {
                   </td>
                 </tr>
               ) : (
-                menores.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.rut || "N/A"}</td>
-                    <td>{m.nombre}</td>
-                    <td>{m.folioLegal}</td>
-                    <td>
-                      {m.casaAsignadaId
-                        ? `Casa ${m.casaAsignadaId}`
-                        : "Sin asignar"}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${m.casaAsignadaId ? "aprobado" : "pendiente"}`}
-                      >
-                        {m.estado}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                menores.map((m) => {
+                  const esSinAsignar =
+                    !m.casaAsignadaId ||
+                    m.estado === "Sin asignar" ||
+                    m.estado === "Ingresado";
+
+                  return (
+                    <tr key={m.id}>
+                      <td>{m.rut || "N/A"}</td>
+                      <td>{m.nombre}</td>
+                      <td>{m.folioLegal}</td>
+                      <td>
+                        {esSinAsignar ? (
+                          <select
+                            className="table-select-casa"
+                            value=""
+                            disabled={asignandoId === m.id}
+                            onChange={(e) => handleAsignarCasaFila(m, e.target.value)}
+                            title="Selecciona una casa para asignar al menor"
+                          >
+                            <option value="" disabled>
+                              {asignandoId === m.id ? "Asignando..." : "Asignar casa..."}
+                            </option>
+                            {casas.map((c) => {
+                              const estaLlena = c.ocupacionActual >= c.capacidad;
+                              return (
+                                <option
+                                  key={c.id}
+                                  value={c.id}
+                                  disabled={estaLlena}
+                                >
+                                  {c.nombre} ({c.ocupacionActual}/{c.capacidad}){estaLlena ? " - Llena" : ""}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        ) : (
+                          <span className="casa-asignada-tag">
+                            <Home size={15} />
+                            {casas.find((c) => c.id === m.casaAsignadaId)?.nombre ||
+                              `Casa ${m.casaAsignadaId}`}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${esSinAsignar ? "pendiente" : "aprobado"}`}
+                        >
+                          {esSinAsignar ? "Sin asignar" : (m.estado || "Asignado a Casa")}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
