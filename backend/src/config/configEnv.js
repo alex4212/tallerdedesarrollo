@@ -1,6 +1,5 @@
 const path = require('path');
 
-require('dotenv').config();
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 
 const readEnv = (key, fallback = "") => {
@@ -20,8 +19,8 @@ const DATABASE_URL =
   readEnv("DATABASE_URL") ||
   `postgresql://${encodeURIComponent(DB_USERNAME)}:${encodeURIComponent(DB_PASSWORD)}@${HOST}:${DB_PORT}/${DB_DATABASE}?schema=public`;
 
-const ACCESS_TOKEN_SECRET = readEnv("ACCESS_TOKEN_SECRET");
-const JWT_SECRET = readEnv("JWT_SECRET", ACCESS_TOKEN_SECRET);
+const ACCESS_TOKEN_SECRET = readEnv("ACCESS_TOKEN_SECRET", "aldeas_sos_access_secret_key_2026");
+const JWT_SECRET = readEnv("JWT_SECRET", ACCESS_TOKEN_SECRET || "aldeas_sos_jwt_secret_key_2026");
 const cookieKey = readEnv("cookieKey");
 const EMAIL_HOST = process.env.EMAIL_HOST;
 const EMAIL_PORT = process.env.EMAIL_PORT;

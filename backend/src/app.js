@@ -9,8 +9,21 @@ const mantenimientoRoutes = require('./routes/mantenimiento.routes');
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  process.env.CORS_ORIGIN,
+  'http://146.83.198.35:1626',
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://146.83.198.35:1626',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    return callback(new Error('Bloqueado por política CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json());

@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { fetchAPI } from "../services/api";
-import { RefreshCw, Home, UserPlus } from "lucide-react";
+import {
+  RefreshCw,
+  Home,
+  UserPlus,
+  X,
+  Map,
+  LayoutGrid,
+  Users,
+  Building2,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 
 export default function Acogida() {
   const [menores, setMenores] = useState([]);
   const [casas, setCasas] = useState([]);
   const [educadoras, setEducadoras] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [vistaModo, setVistaModo] = useState("mapa"); // "mapa" | "tarjetas"
+
+  const [showModalRegistrar, setShowModalRegistrar] = useState(false);
+  const [showModalAsignar, setShowModalAsignar] = useState(false);
 
   const [nombreMenor, setNombreMenor] = useState("");
   const [rutMenor, setRutMenor] = useState("");
@@ -54,6 +70,7 @@ export default function Acogida() {
       setRutMenor("");
       setEdad("");
       setOrdenTribunal("");
+      setShowModalRegistrar(false);
       cargarDatos();
       alert("Menor registrado exitosamente");
     } catch (err) {
@@ -72,12 +89,27 @@ export default function Acogida() {
       });
       setMenorSeleccionado("");
       setCasaSeleccionada("");
+      setShowModalAsignar(false);
       cargarDatos();
       alert("Casa asignada exitosamente");
     } catch (err) {
       alert(err.message);
     }
   };
+
+  // Coordenadas fijas para la distribución visual de las 5 casas en el mapa
+  const posicionesCasas = [
+    { top: "10%", left: "8%" },
+    { top: "10%", right: "8%" },
+    { top: "45%", right: "6%" },
+    { bottom: "10%", left: "10%" },
+    { bottom: "10%", right: "12%" },
+  ];
+
+  const totalCapacidad = casas.reduce((acc, c) => acc + (c.capacidad || 0), 0);
+  const totalOcupados = casas.reduce((acc, c) => acc + (c.ocupacionActual || 0), 0);
+  const totalDisponible = totalCapacidad - totalOcupados;
+  const menoresSinCasa = menores.filter((m) => !m.casaAsignadaId).length;
 
   return (
     <div className="page-fade-in">
@@ -89,110 +121,309 @@ export default function Acogida() {
       </div>
 
       <div className="glass-card mb-6">
-        <div className="flex-between mb-4">
+        <div className="flex-between mb-4" style={{ flexWrap: "wrap", gap: "10px" }}>
           <h3>Estado de las Casas</h3>
-          <button
-            className="btn-secondary"
-            onClick={cargarDatos}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? "spin" : ""} /> Actualizar
-          </button>
+          <div className="flex-align-center gap-2">
+            <div style={{ display: "inline-flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
+              <button
+                type="button"
+                className={`view-toggle-btn ${vistaModo === "mapa" ? "active" : ""}`}
+                onClick={() => setVistaModo("mapa")}
+              >
+                <Map size={16} /> Mapa Aldea
+              </button>
+              <button
+                type="button"
+                className={`view-toggle-btn ${vistaModo === "tarjetas" ? "active" : ""}`}
+                onClick={() => setVistaModo("tarjetas")}
+              >
+                <LayoutGrid size={16} /> Tarjetas
+              </button>
+            </div>
+            <button
+              className="btn-secondary"
+              onClick={cargarDatos}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? "spin" : ""} /> Actualizar
+            </button>
+          </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "15px",
-          }}
-        >
-          {casas.map((casa) => {
-            const encargada = educadoras.find((e) => e.casaId === casa.id);
-            const estaLlena = casa.ocupacionActual >= casa.capacidad;
-            return (
-              <div
-                key={casa.id}
-                className="glass-container house-card"
-                style={{ padding: "15px", textAlign: "center" }}
-              >
-                <Home
-                  size={32}
-                  style={{
-                    color: estaLlena ? "var(--danger)" : "var(--primary-color)",
-                    margin: "0 auto 10px",
-                  }}
-                />
-                <h4>{casa.nombre}</h4>
-                <p className="text-muted mb-2" style={{ fontSize: "0.8rem" }}>
-                  Encargada: {encargada ? encargada.nombre : "N/A"}
-                </p>
-                <div
-                  className={`badge ${estaLlena ? "rechazado" : "aprobado"}`}
-                >
-                  {casa.ocupacionActual} / {casa.capacidad} Niños
-                </div>
+        {/* VISTA MAPA INTERACTIVO DE LA ALDEA */}
+        {vistaModo === "mapa" ? (
+          <div className="village-map-container">
+            <div className="map-kpi-bar">
+              <div className="kpi-chip">
+                <Building2 size={18} style={{ color: "var(--primary-color)" }} />
+                <span>Casas Totales: <strong>{casas.length}</strong></span>
+              </div>
+              <div className="kpi-chip">
+                <Users size={18} style={{ color: "#38BDF8" }} />
+                <span>Ocupación: <strong>{totalOcupados} / {totalCapacidad}</strong></span>
+              </div>
+              <div className="kpi-chip">
+                <CheckCircle2 size={18} style={{ color: "var(--success)" }} />
+                <span>Disponibles: <strong>{totalDisponible} cupos</strong></span>
+              </div>
+              <div className="kpi-chip">
+                <AlertCircle size={18} style={{ color: "var(--warning)" }} />
+                <span>Sin Casa: <strong>{menoresSinCasa} niños</strong></span>
+              </div>
+            </div>
 
-                <div className="house-details-overlay">
-                  <h4
-                    style={{
-                      margin: 0,
-                      color: "var(--primary-color)",
-                      fontSize: "0.9rem",
+            <div className="map-canvas">
+              {/* Rutas conectoras SVG de la Aldea */}
+              <svg className="village-path-svg">
+                <line x1="50%" y1="50%" x2="16%" y2="25%" stroke="#818CF8" strokeWidth="2" strokeDasharray="6,6" />
+                <line x1="50%" y1="50%" x2="84%" y2="25%" stroke="#818CF8" strokeWidth="2" strokeDasharray="6,6" />
+                <line x1="50%" y1="50%" x2="84%" y2="58%" stroke="#818CF8" strokeWidth="2" strokeDasharray="6,6" />
+                <line x1="50%" y1="50%" x2="18%" y2="78%" stroke="#818CF8" strokeWidth="2" strokeDasharray="6,6" />
+                <line x1="50%" y1="50%" x2="80%" y2="78%" stroke="#818CF8" strokeWidth="2" strokeDasharray="6,6" />
+              </svg>
+
+              {/* Plaza Central */}
+              <div className="central-plaza">
+                <Building2 size={24} style={{ marginBottom: "4px" }} />
+                <strong>Plaza Central</strong>
+                <span>Aldea SOS</span>
+              </div>
+
+              {/* Casas en el Mapa */}
+              {casas.map((casa, idx) => {
+                const encargada = educadoras.find((e) => e.casaId === casa.id);
+                const estaLlena = casa.ocupacionActual >= casa.capacidad;
+                const pos = posicionesCasas[idx % posicionesCasas.length];
+
+                return (
+                  <div
+                    key={casa.id}
+                    className={`house-node ${estaLlena ? "llena" : "disponible"}`}
+                    style={pos}
+                    onClick={() => {
+                      setCasaSeleccionada(casa.id);
+                      setShowModalAsignar(true);
                     }}
+                    title="Haz clic para asignar un menor a esta casa"
                   >
-                    Menores Asignados
-                  </h4>
-                  <ul className="house-details-list">
-                    {menores.filter((m) => m.casaAsignadaId === casa.id)
-                      .length > 0 ? (
-                      menores
-                        .filter((m) => m.casaAsignadaId === casa.id)
-                        .map((m) => (
-                          <li key={m.id}>
-                            <span>{m.nombre}</span>
-                            <span className="text-muted">{m.edad}a</span>
-                          </li>
-                        ))
-                    ) : (
-                      <li
+                    <Home
+                      size={24}
+                      style={{
+                        color: estaLlena ? "var(--danger)" : "var(--primary-color)",
+                        margin: "0 auto 6px",
+                      }}
+                    />
+                    <h5 style={{ fontSize: "0.88rem", margin: "2px 0", color: "white" }}>
+                      {casa.nombre}
+                    </h5>
+                    <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", margin: "0 0 6px" }}>
+                      {encargada ? encargada.nombre : "Sin encargada"}
+                    </p>
+                    <div
+                      className={`badge ${estaLlena ? "rechazado" : "aprobado"}`}
+                      style={{ fontSize: "0.72rem", padding: "4px 8px" }}
+                    >
+                      {casa.ocupacionActual} / {casa.capacidad} Niños
+                    </div>
+
+                    <div className="house-details-overlay">
+                      <h4
                         style={{
-                          justifyContent: "center",
-                          color: "var(--text-muted)",
+                          margin: 0,
+                          color: "var(--primary-color)",
+                          fontSize: "0.85rem",
                         }}
                       >
-                        Sin menores
-                      </li>
-                    )}
-                  </ul>
+                        {casa.nombre}
+                      </h4>
+                      <ul className="house-details-list">
+                        {menores.filter((m) => m.casaAsignadaId === casa.id).length > 0 ? (
+                          menores
+                            .filter((m) => m.casaAsignadaId === casa.id)
+                            .map((m) => (
+                              <li key={m.id}>
+                                <span>{m.nombre}</span>
+                                <span className="text-muted">{m.edad}a</span>
+                              </li>
+                            ))
+                        ) : (
+                          <li style={{ justifyContent: "center", color: "var(--text-muted)" }}>
+                            Sin menores
+                          </li>
+                        )}
+                      </ul>
+                      <span style={{ fontSize: "0.7rem", color: "var(--primary-color)", marginTop: "8px" }}>
+                        + Clic para Asignar
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          /* VISTA EN TARJETAS */
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "15px",
+            }}
+          >
+            {casas.map((casa) => {
+              const encargada = educadoras.find((e) => e.casaId === casa.id);
+              const estaLlena = casa.ocupacionActual >= casa.capacidad;
+              return (
+                <div
+                  key={casa.id}
+                  className="glass-container house-card"
+                  style={{ padding: "15px", textAlign: "center" }}
+                >
+                  <Home
+                    size={32}
+                    style={{
+                      color: estaLlena ? "var(--danger)" : "var(--primary-color)",
+                      margin: "0 auto 10px",
+                    }}
+                  />
+                  <h4>{casa.nombre}</h4>
+                  <p className="text-muted mb-2" style={{ fontSize: "0.8rem" }}>
+                    Encargada: {encargada ? encargada.nombre : "N/A"}
+                  </p>
+                  <div
+                    className={`badge ${estaLlena ? "rechazado" : "aprobado"}`}
+                  >
+                    {casa.ocupacionActual} / {casa.capacidad} Niños
+                  </div>
+
+                  <div className="house-details-overlay">
+                    <h4
+                      style={{
+                        margin: 0,
+                        color: "var(--primary-color)",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Menores Asignados
+                    </h4>
+                    <ul className="house-details-list">
+                      {menores.filter((m) => m.casaAsignadaId === casa.id)
+                        .length > 0 ? (
+                        menores
+                          .filter((m) => m.casaAsignadaId === casa.id)
+                          .map((m) => (
+                            <li key={m.id}>
+                              <span>{m.nombre}</span>
+                              <span className="text-muted">{m.edad}a</span>
+                            </li>
+                          ))
+                      ) : (
+                        <li
+                          style={{
+                            justifyContent: "center",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          Sin menores
+                        </li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+
+      <div className="glass-card">
+        <div className="flex-between mb-4" style={{ flexWrap: "wrap", gap: "10px" }}>
+          <h3 style={{ margin: 0 }}>Lista Histórica de Menores</h3>
+          <div className="flex-align-center gap-2">
+            <button
+              className="btn-primary"
+              onClick={() => setShowModalRegistrar(true)}
+              style={{ width: "auto", padding: "8px 16px", display: "inline-flex", alignItems: "center", gap: "8px" }}
+            >
+              <UserPlus size={18} /> Agregar
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => setShowModalAsignar(true)}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+            >
+              <Home size={18} /> Asignar Casa
+            </button>
+          </div>
+        </div>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>RUT</th>
+                <th>Nombre</th>
+                <th>Folio Legal</th>
+                <th>Casa Asignada</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="text-center">
+                    Cargando...
+                  </td>
+                </tr>
+              ) : menores.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center">
+                    No hay menores registrados.
+                  </td>
+                </tr>
+              ) : (
+                menores.map((m) => (
+                  <tr key={m.id}>
+                    <td>{m.rut || "N/A"}</td>
+                    <td>{m.nombre}</td>
+                    <td>{m.folioLegal}</td>
+                    <td>
+                      {m.casaAsignadaId
+                        ? `Casa ${m.casaAsignadaId}`
+                        : "Sin asignar"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${m.casaAsignadaId ? "aprobado" : "pendiente"}`}
+                      >
+                        {m.estado}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px",
-          alignItems: "stretch",
-        }}
-        className="mb-6"
-      >
-        <div
-          className="glass-card"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <h3 className="mb-4 flex-align-center gap-2">
-            <UserPlus size={20} /> Registrar Nuevo Ingreso
-          </h3>
-          <form
-            onSubmit={registrarMenor}
-            style={{ display: "flex", flexDirection: "column", flex: 1 }}
-          >
-            <div style={{ flex: 1 }}>
+      {/* Modal Registrar Menor */}
+      {showModalRegistrar && (
+        <div className="modal-overlay" onClick={() => setShowModalRegistrar(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <UserPlus size={20} /> Registrar Nuevo Ingreso
+              </h3>
+              <button
+                className="btn-icon"
+                onClick={() => setShowModalRegistrar(false)}
+                type="button"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={registrarMenor}>
               <div className="input-group">
                 <label>Nombre Completo</label>
                 <input
@@ -200,6 +431,7 @@ export default function Acogida() {
                   value={nombreMenor}
                   onChange={(e) => setNombreMenor(e.target.value)}
                   required
+                  placeholder="Ej: Juan Pérez"
                 />
               </div>
               <div className="input-group">
@@ -219,6 +451,7 @@ export default function Acogida() {
                   value={edad}
                   onChange={(e) => setEdad(e.target.value)}
                   required
+                  placeholder="Ej: 8"
                 />
               </div>
               <div className="input-group">
@@ -228,31 +461,50 @@ export default function Acogida() {
                   value={ordenTribunal}
                   onChange={(e) => setOrdenTribunal(e.target.value)}
                   required
+                  placeholder="Ej: F-12345"
                 />
               </div>
-            </div>
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{ marginTop: "auto" }}
-            >
-              Registrar menor
-            </button>
-          </form>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  marginTop: "20px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowModalRegistrar(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" style={{ width: "auto" }}>
+                  Registrar Menor
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      )}
 
-        <div
-          className="glass-card"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <h3 className="mb-4 flex-align-center gap-2">
-            <Home size={20} /> Asignar a Casa
-          </h3>
-          <form
-            onSubmit={asignarCasa}
-            style={{ display: "flex", flexDirection: "column", flex: 1 }}
-          >
-            <div style={{ flex: 1 }}>
+      {/* Modal Asignar Casa */}
+      {showModalAsignar && (
+        <div className="modal-overlay" onClick={() => setShowModalAsignar(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <Home size={20} /> Asignar a Casa
+              </h3>
+              <button
+                className="btn-icon"
+                onClick={() => setShowModalAsignar(false)}
+                type="button"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={asignarCasa}>
               <div className="input-group">
                 <label>Seleccionar Menor</label>
                 <select
@@ -326,69 +578,30 @@ export default function Acogida() {
                   ))}
                 </select>
               </div>
-            </div>
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{ marginTop: "auto" }}
-            >
-              Asignar Casa
-            </button>
-          </form>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  marginTop: "20px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowModalAsignar(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" style={{ width: "auto" }}>
+                  Asignar Casa
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-
-      <div className="glass-card">
-        <h3 className="mb-4">Lista Histórica de Menores</h3>
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>RUT</th>
-                <th>Nombre</th>
-                <th>Folio Legal</th>
-                <th>Casa Asignada</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="text-center">
-                    Cargando...
-                  </td>
-                </tr>
-              ) : menores.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center">
-                    No hay menores registrados.
-                  </td>
-                </tr>
-              ) : (
-                menores.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.rut || "N/A"}</td>
-                    <td>{m.nombre}</td>
-                    <td>{m.folioLegal}</td>
-                    <td>
-                      {m.casaAsignadaId
-                        ? `Casa ${m.casaAsignadaId}`
-                        : "Sin asignar"}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${m.casaAsignadaId ? "aprobado" : "pendiente"}`}
-                      >
-                        {m.estado}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
+
