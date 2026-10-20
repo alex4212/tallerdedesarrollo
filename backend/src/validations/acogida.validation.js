@@ -18,7 +18,6 @@ const validateRut = (req, res, next) => {
     return res.status(400).json({ message: 'El RUT ingresado no es válido' });
   }
 
-
   let sum = 0;
   let multiplier = 2;
 
@@ -39,6 +38,24 @@ const validateRut = (req, res, next) => {
   next();
 };
 
+// NUEVA FUNCIÓN QUE FALTABA
+const validarEdadNino = (req, res, next) => {
+  const { edad } = req.body;
+
+  if (edad === undefined) {
+    return res.status(400).json({ message: 'La edad es obligatoria' });
+  }
+  if (typeof edad !== 'number') {
+    return res.status(400).json({ message: 'La edad debe ser un número válido' });
+  }
+  if (edad > 18 || edad < 0) {
+    return res.status(400).json({ message: 'El programa de acogida es para menores de 18 años' });
+  }
+
+  next();
+};
+
 module.exports = {
-  validateRut
+  validateRut,
+  validarEdadNino
 };
