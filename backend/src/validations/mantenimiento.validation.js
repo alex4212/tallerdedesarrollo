@@ -19,7 +19,4 @@ const validateTaskStatus = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  validateTask,
-  validateTaskStatus
-};
+export { validateTask, validateTaskStatus };

@@ -1,7 +1,12 @@
-require('dotenv').config({ path: require('path').join(__dirname, 'config', '.env') });
-const app = require('./app');
-const { connectDB } = require('./config/configDb');
-const { setupDatabase } = require('./config/initialSetup');
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import './config/configEnv.js';
+import app from './app.js';
+import { connectDB } from './config/configDb.js';
+import { setupDatabase } from './config/initialSetup.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PORT = process.env.PORT || 80;
 

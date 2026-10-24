@@ -1,4 +1,5 @@
-const { pool } = require('./configDb');
+import { pool } from './configDb.js';
+import bcrypt from 'bcryptjs';
 
 const createDefaultRoles = async () => {
   try {
@@ -56,6 +57,34 @@ const setupDatabase = async () => {
       );
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        email VARCHAR(150) UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role VARCHAR(50) DEFAULT 'EDUCADORA',
+        casa_id INT REFERENCES casas(id) NULL
+      );
+    `);
+
+    // Insertar usuarios por defecto si no existen
+    const usuariosCount = await pool.query('SELECT COUNT(*) FROM usuarios');
+    if (parseInt(usuariosCount.rows[0].count) === 0) {
+      const saltRounds = 10;
+      const hashAdmin = await bcrypt.hash('Ivresse Jorquera', saltRounds);
+      const hashEducadora = await bcrypt.hash('Maria Perez', saltRounds);
+      await pool.query(`
+        INSERT INTO usuarios (nombre, email, password_hash, role, casa_id) VALUES
+        ($1, $2, $3, 'ADMIN', NULL),
+        ($4, $5, $6, 'EDUCADORA', 1)
+      `, [
+        'Ivresse Jorquera', 'Ivresse.jorquera@aldeasinfantiles.cl', hashAdmin,
+        'María Pérez',      'maria.perez@aldeasinfantiles.cl',      hashEducadora
+      ]);
+      console.log('>>> Usuarios por defecto creados con contraseñas hasheadas');
+    }
+
     // Insertar casas por defecto si no existen
     const casasCount = await pool.query('SELECT COUNT(*) FROM casas');
     if (parseInt(casasCount.rows[0].count) === 0) {
@@ -91,7 +120,4 @@ const setupDatabase = async () => {
   }
 };
 
-module.exports = {
-  createDefaultRoles,
-  setupDatabase
-};
+export { createDefaultRoles, setupDatabase };

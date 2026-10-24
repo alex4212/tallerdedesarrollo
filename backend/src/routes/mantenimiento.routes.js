@@ -1,7 +1,7 @@
-const { Router } = require('express');
-const mantenimientoController = require('../controllers/mantenimiento.controller');
-const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
-const { validateTask, validateTaskStatus } = require('../validations/mantenimiento.validation');
+import { Router } from 'express';
+import * as mantenimientoController from '../controllers/mantenimiento.controller.js';
+import { verifyToken, isAdmin } from '../middlewares/auth.middleware.js';
+import { validateTask, validateTaskStatus } from '../validations/mantenimiento.validation.js';
 
 const router = Router();
 
@@ -16,4 +16,4 @@ router.patch('/tareas/:id/estado', validateTaskStatus, mantenimientoController.a
 router.put('/tareas/:id', validateTask, mantenimientoController.actualizarTarea);
 router.delete('/tareas/:id', mantenimientoController.eliminarTarea);
 
-module.exports = router;
+export default router;

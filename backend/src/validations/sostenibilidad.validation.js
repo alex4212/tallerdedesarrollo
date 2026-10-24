@@ -22,7 +22,4 @@ const validateExpenseStatus = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  validateExpense,
-  validateExpenseStatus
-};
+export { validateExpense, validateExpenseStatus };

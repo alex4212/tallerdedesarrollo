@@ -1,6 +1,11 @@
-const path = require('path');
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
 
-require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '.env'), override: true });
 
 const readEnv = (key, fallback = "") => {
   const value = process.env[key];
@@ -31,7 +36,7 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 // Bórralo (o comenta la línea) una vez que confirmes que la conexión funciona.
 console.log('>>> DATABASE_URL cargada:', DATABASE_URL.replace(DB_PASSWORD, '****'));
 
-module.exports = {
+export {
   PORT,
   HOST,
   DB_USERNAME,

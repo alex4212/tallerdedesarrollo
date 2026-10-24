@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/configEnv');
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/configEnv.js';
 
 const SECRET_KEY = JWT_SECRET || 'aldeas_sos_jwt_secret_key_2026';
 
@@ -47,8 +47,4 @@ const hasRole = (...allowedRoles) => {
   };
 };
 
-module.exports = {
-  verifyToken,
-  isAdmin,
-  hasRole
-};
+export { verifyToken, isAdmin, hasRole };

@@ -1,8 +1,10 @@
-const { Pool } = require('pg');
-const configEnv = require('./configEnv');
+import pg from 'pg';
+import { DATABASE_URL } from './configEnv.js';
+
+const { Pool } = pg;
 
 const pool = new Pool({
-  connectionString: configEnv.DATABASE_URL
+  connectionString: DATABASE_URL
 });
 
 const connectDB = async () => {
@@ -16,4 +18,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = { pool, connectDB };
+export { pool, connectDB };

@@ -1,4 +1,4 @@
-const { pool } = require('../config/configDb');
+import { pool } from '../config/configDb.js';
 
 const registrarGasto = async (req, res) => {
   const { casaId, monto, descripcion, urlBoleta } = req.body;
@@ -90,10 +90,4 @@ const eliminarGasto = async (req, res) => {
   }
 };
 
-module.exports = {
-  registrarGasto,
-  obtenerGastos,
-  actualizarEstadoGasto,
-  actualizarGasto,
-  eliminarGasto
-};
+export { registrarGasto, obtenerGastos, actualizarEstadoGasto, actualizarGasto, eliminarGasto };

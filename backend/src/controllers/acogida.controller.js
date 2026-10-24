@@ -1,4 +1,4 @@
-const { pool } = require('../config/configDb');
+import { pool } from '../config/configDb.js';
 
 const ingresarMenor = async (req, res) => {
   const { nombre, edad, folioLegal, rut, fechaIngreso } = req.body;
@@ -130,7 +130,7 @@ const obtenerEducadoras = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   ingresarMenor,
   asignarCasa,
   obtenerEducadorasTurnoActivo,

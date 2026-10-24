@@ -1,57 +1,55 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/configEnv');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { pool } from '../config/configDb.js';
+import { JWT_SECRET } from '../config/configEnv.js';
 
 const SECRET_KEY = JWT_SECRET || 'aldeas_sos_jwt_secret_key_2026';
 
-const users = [
-  {
-    id: 1,
-    name: 'Ivresse Jorquera',
-    email: 'Ivresse.jorquera@aldeasinfantiles.cl',
-    password: 'Ivresse Jorquera',
-    role: 'ADMIN',
-    houseId: null
-  },
-  {
-    id: 2,
-    name: 'María Pérez',
-    email: 'maria.perez@aldeasinfantiles.cl',
-    password: 'Maria Perez',
-    role: 'EDUCADORA',
-    houseId: 1
-  }
-];
-
-const login = (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
   }
 
-  const user = users.find(
-    u => u.email.toLowerCase() === email.trim().toLowerCase()
-  );
+  try {
+    // Buscar usuario en la base de datos
+    const result = await pool.query(
+      'SELECT * FROM usuarios WHERE email = $1',
+      [email.trim().toLowerCase()]
+    );
 
-  if (!user || user.password !== password) {
-    return res.status(401).json({ message: 'Credenciales inválidas' });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+
+    const user = result.rows[0];
+
+    // Verificar contraseña contra el hash almacenado
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+
+    const userPayload = {
+      id: user.id,
+      name: user.nombre,
+      email: user.email,
+      role: user.role,
+      houseId: user.casa_id
+    };
+
+    const token = jwt.sign(userPayload, SECRET_KEY, { expiresIn: '24h' });
+
+    res.json({
+      message: 'Inicio de sesión exitoso',
+      user: userPayload,
+      token
+    });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
-
-  const userPayload = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    houseId: user.houseId
-  };
-
-  const token = jwt.sign(userPayload, SECRET_KEY, { expiresIn: '24h' });
-
-  res.json({
-    message: 'Inicio de sesión exitoso',
-    user: userPayload,
-    token
-  });
 };
 
 const me = (req, res) => {
@@ -61,8 +59,4 @@ const me = (req, res) => {
   res.json({ user: req.user });
 };
 
-module.exports = {
-  login,
-  me,
-  users
-};
+export { login, me };

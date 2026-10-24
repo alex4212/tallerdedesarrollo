@@ -5,6 +5,4 @@ const getHome = (req, res) => {
   });
 };
 
-module.exports = {
-  getHome
-};
+export { getHome };

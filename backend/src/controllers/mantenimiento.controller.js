@@ -64,10 +64,4 @@ const eliminarTarea = (req, res) => {
   res.json({ message: 'Tarea eliminada' });
 };
 
-module.exports = {
-  crearTarea,
-  obtenerTareas,
-  actualizarEstadoTarea,
-  actualizarTarea,
-  eliminarTarea
-};
+export { crearTarea, obtenerTareas, actualizarEstadoTarea, actualizarTarea, eliminarTarea };

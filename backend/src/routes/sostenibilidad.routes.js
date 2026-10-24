@@ -1,7 +1,7 @@
-const { Router } = require('express');
-const sostenibilidadController = require('../controllers/sostenibilidad.controller');
-const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
-const { validateExpense, validateExpenseStatus } = require('../validations/sostenibilidad.validation');
+import { Router } from 'express';
+import * as sostenibilidadController from '../controllers/sostenibilidad.controller.js';
+import { verifyToken, isAdmin } from '../middlewares/auth.middleware.js';
+import { validateExpense, validateExpenseStatus } from '../validations/sostenibilidad.validation.js';
 
 const router = Router();
 
@@ -16,4 +16,4 @@ router.delete('/gastos/:id', sostenibilidadController.eliminarGasto);
 
 router.post('/gastos', validateExpense, sostenibilidadController.registrarGasto);
 
-module.exports = router;
+export default router;

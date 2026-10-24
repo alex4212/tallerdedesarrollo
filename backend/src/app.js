@@ -1,11 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const indexRoutes = require('./routes/index.routes');
-const acogidaRoutes = require('./routes/acogida.routes');
-const authRoutes = require('./routes/auth.routes');
-const sostenibilidadRoutes = require('./routes/sostenibilidad.routes');
-const mantenimientoRoutes = require('./routes/mantenimiento.routes');
+import express from 'express';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import indexRoutes from './routes/index.routes.js';
+import acogidaRoutes from './routes/acogida.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import sostenibilidadRoutes from './routes/sostenibilidad.routes.js';
+import mantenimientoRoutes from './routes/mantenimiento.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -36,14 +40,14 @@ app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 
 // Servir estáticos del frontend si existen
-const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+const frontendDistPath = join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ message: 'Not found' });
   }
-  res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+  res.sendFile(join(frontendDistPath, 'index.html'), (err) => {
     if (err) {
       res.status(404).json({ message: 'Frontend dist not found' });
     }
@@ -55,5 +59,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-module.exports = app;
-
+export default app;

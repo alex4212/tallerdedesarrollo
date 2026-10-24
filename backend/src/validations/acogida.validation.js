@@ -39,6 +39,4 @@ const validateRut = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  validateRut
-};
+export { validateRut };
