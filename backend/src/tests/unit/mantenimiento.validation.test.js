@@ -37,10 +37,46 @@ describe('Pruebas Unitarias: Mantenimiento Validations', () => {
       expect(res.json).toHaveBeenCalledWith({ message: 'descripcion es requerida y no puede estar vacía' });
       expect(next).not.toHaveBeenCalled();
     });
+
+    it('4. Debería fallar (400) si la descripción contiene solo números', () => {
+      req.body = { casaId: 5, descripcion: '123456' }; 
+      validateTask(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción no puede contener solo números' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('5. Debería fallar (400) si la descripción tiene menos de 5 caracteres', () => {
+      req.body = { casaId: 5, descripcion: 'Foco' }; 
+      validateTask(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción debe tener entre 5 y 255 caracteres' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('6. Debería fallar (400) si la descripción contiene texto sin sentido o spam (ej. ahshdh)', () => {
+      req.body = { casaId: 5, descripcion: 'ahshdh' }; 
+      validateTask(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción ingresada no parece válida o contiene texto sin sentido' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('7. Debería fallar (400) si la descripción tiene caracteres repetitivos (ej. aaaaaa)', () => {
+      req.body = { casaId: 5, descripcion: 'aaaaaa' }; 
+      validateTask(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción contiene caracteres repetitivos no válidos' });
+      expect(next).not.toHaveBeenCalled();
+    });
   });
 
   describe('Función: validateTaskStatus', () => {
-    it('4. Debería llamar a next() si el estado es un string válido', () => {
+    it('8. Debería llamar a next() si el estado es un string válido', () => {
       req.body = { estado: 'Completado' };
       validateTaskStatus(req, res, next);
 

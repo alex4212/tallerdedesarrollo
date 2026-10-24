@@ -46,17 +46,53 @@ describe('Pruebas Unitarias: Sostenibilidad Validations', () => {
       expect(res.json).toHaveBeenCalledWith({ message: 'descripcion es requerida y no puede estar vacía' });
       expect(next).not.toHaveBeenCalled();
     });
+
+    it('5. Debería fallar (400) si la descripción contiene solo números', () => {
+      req.body = { casaId: 10, monto: 50000, descripcion: '987654' };
+      validateExpense(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción no puede contener solo números' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('6. Debería fallar (400) si la descripción tiene menos de 5 caracteres', () => {
+      req.body = { casaId: 10, monto: 50000, descripcion: 'Gas' };
+      validateExpense(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción debe tener entre 5 y 255 caracteres' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('7. Debería fallar (400) si la descripción contiene texto sin sentido o spam (ej. ahshdh)', () => {
+      req.body = { casaId: 10, monto: 50000, descripcion: 'ahshdh' };
+      validateExpense(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción ingresada no parece válida o contiene texto sin sentido' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('8. Debería fallar (400) si la descripción tiene caracteres repetitivos (ej. aaaaaa)', () => {
+      req.body = { casaId: 10, monto: 50000, descripcion: 'aaaaaa' };
+      validateExpense(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'La descripción contiene caracteres repetitivos no válidos' });
+      expect(next).not.toHaveBeenCalled();
+    });
   });
 
   describe('Función: validateExpenseStatus', () => {
-    it('5. Debería llamar a next() si el estado es APROBADO o RECHAZADO', () => {
+    it('9. Debería llamar a next() si el estado es APROBADO o RECHAZADO', () => {
       req.body = { estado: 'APROBADO' };
       validateExpenseStatus(req, res, next);
 
       expect(next).toHaveBeenCalledOnce();
     });
 
-    it('6. Debería fallar (400) si el estado es inválido (ej. PENDIENTE)', () => {
+    it('10. Debería fallar (400) si el estado es inválido (ej. PENDIENTE)', () => {
       req.body = { estado: 'PENDIENTE' };
       validateExpenseStatus(req, res, next);
 
