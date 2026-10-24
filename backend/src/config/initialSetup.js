@@ -52,9 +52,15 @@ const setupDatabase = async () => {
         descripcion TEXT NOT NULL,
         url_boleta TEXT,
         estado VARCHAR(50) DEFAULT 'PENDIENTE',
+        categoria VARCHAR(50) DEFAULT 'COMESTIBLES',
+        establecimiento VARCHAR(100),
         fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Agregar columnas nuevas si la tabla ya existía antes
+    await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS categoria VARCHAR(50) DEFAULT 'COMESTIBLES';`);
+    await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS establecimiento VARCHAR(100);`);
 
     // Insertar casas por defecto si no existen
     const casasCount = await pool.query('SELECT COUNT(*) FROM casas');

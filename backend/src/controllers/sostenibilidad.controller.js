@@ -1,15 +1,22 @@
 const { pool } = require('../config/configDb');
 
 const registrarGasto = async (req, res) => {
-  const { casaId, monto, descripcion, urlBoleta } = req.body;
+  const { casaId, monto, descripcion, urlBoleta, categoria, establecimiento } = req.body;
 
   try {
     const query = `
-      INSERT INTO gastos (casa_id, monto, descripcion, url_boleta, estado, fecha)
-      VALUES ($1, $2, $3, $4, 'PENDIENTE', CURRENT_TIMESTAMP)
+      INSERT INTO gastos (casa_id, monto, descripcion, url_boleta, estado, categoria, establecimiento, fecha)
+      VALUES ($1, $2, $3, $4, 'PENDIENTE', $5, $6, CURRENT_TIMESTAMP)
       RETURNING *, casa_id AS "casaId", url_boleta AS "urlBoleta"
     `;
-    const values = [casaId, monto, descripcion, urlBoleta || null];
+    const values = [
+      casaId,
+      monto,
+      descripcion,
+      urlBoleta || null,
+      categoria || 'COMESTIBLES',
+      establecimiento || null
+    ];
     const result = await pool.query(query, values);
     
     res.status(201).json({
@@ -24,7 +31,9 @@ const registrarGasto = async (req, res) => {
 
 const obtenerGastos = async (req, res) => {
   try {
-    const result = await pool.query('SELECT *, casa_id AS "casaId", url_boleta AS "urlBoleta" FROM gastos ORDER BY id ASC');
+    const result = await pool.query(
+      'SELECT *, casa_id AS "casaId", url_boleta AS "urlBoleta" FROM gastos ORDER BY fecha DESC'
+    );
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -55,7 +64,7 @@ const actualizarEstadoGasto = async (req, res) => {
 
 const actualizarGasto = async (req, res) => {
   const { id } = req.params;
-  const { descripcion, monto, casaId, urlBoleta } = req.body;
+  const { descripcion, monto, casaId, urlBoleta, categoria, establecimiento } = req.body;
   try {
     const gastoRes = await pool.query('SELECT * FROM gastos WHERE id = $1', [parseInt(id)]);
     if (gastoRes.rows.length === 0) return res.status(404).json({ message: 'Gasto no encontrado' });
@@ -65,10 +74,15 @@ const actualizarGasto = async (req, res) => {
     const newMonto = monto || gasto.monto;
     const newCasa = casaId || gasto.casa_id;
     const newUrl = urlBoleta !== undefined ? urlBoleta : gasto.url_boleta;
+    const newCategoria = categoria || gasto.categoria;
+    const newEstablecimiento = establecimiento !== undefined ? establecimiento : gasto.establecimiento;
 
     const result = await pool.query(
-      'UPDATE gastos SET descripcion = $1, monto = $2, casa_id = $3, url_boleta = $4 WHERE id = $5 RETURNING *, casa_id AS "casaId", url_boleta AS "urlBoleta"',
-      [newDesc, newMonto, newCasa, newUrl, parseInt(id)]
+      `UPDATE gastos 
+       SET descripcion = $1, monto = $2, casa_id = $3, url_boleta = $4, categoria = $5, establecimiento = $6
+       WHERE id = $7
+       RETURNING *, casa_id AS "casaId", url_boleta AS "urlBoleta"`,
+      [newDesc, newMonto, newCasa, newUrl, newCategoria, newEstablecimiento, parseInt(id)]
     );
 
     res.json({ message: 'Gasto actualizado', gasto: result.rows[0] });

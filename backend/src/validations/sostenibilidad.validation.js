@@ -1,5 +1,7 @@
+const CATEGORIAS_VALIDAS = ['COMESTIBLES', 'ASEO_Y_LIMPIEZA'];
+
 const validateExpense = (req, res, next) => {
-  const { casaId, monto, descripcion } = req.body;
+  const { casaId, monto, descripcion, categoria } = req.body;
 
   if (!casaId || typeof casaId !== 'number') {
     return res.status(400).json({ message: 'casaId es requerido y debe ser un número' });
@@ -9,6 +11,9 @@ const validateExpense = (req, res, next) => {
   }
   if (!descripcion || typeof descripcion !== 'string' || descripcion.trim() === '') {
     return res.status(400).json({ message: 'descripcion es requerida y no puede estar vacía' });
+  }
+  if (categoria && !CATEGORIAS_VALIDAS.includes(categoria)) {
+    return res.status(400).json({ message: `Categoría inválida. Use: ${CATEGORIAS_VALIDAS.join(' o ')}` });
   }
 
   next();
