@@ -11,6 +11,7 @@ import {
   Building2,
   CheckCircle2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 
 export default function Acogida() {
@@ -32,6 +33,25 @@ export default function Acogida() {
   const [menorSeleccionado, setMenorSeleccionado] = useState("");
   const [casaSeleccionada, setCasaSeleccionada] = useState("");
   const [asignandoId, setAsignandoId] = useState(null);
+
+  const [menorAEliminar, setMenorAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
+
+  const confirmarEliminar = async () => {
+    if (!menorAEliminar) return;
+    setEliminando(true);
+    try {
+      await fetchAPI(`/acogida/menores/${menorAEliminar.id}`, {
+        method: "DELETE",
+      });
+      setMenorAEliminar(null);
+      await cargarDatos();
+    } catch (err) {
+      alert(err.message || "Error al eliminar menor");
+    } finally {
+      setEliminando(false);
+    }
+  };
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -383,18 +403,19 @@ export default function Acogida() {
                 <th>Folio Legal</th>
                 <th>Casa Asignada</th>
                 <th>Estado</th>
+                <th style={{ textAlign: "center" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="6" className="text-center">
                     Cargando...
                   </td>
                 </tr>
               ) : menores.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="6" className="text-center">
                     No hay menores registrados.
                   </td>
                 </tr>
@@ -449,6 +470,25 @@ export default function Acogida() {
                         >
                           {esSinAsignar ? "Sin asignar" : (m.estado || "Asignado a Casa")}
                         </span>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setMenorAEliminar(m)}
+                          style={{
+                            padding: "6px 10px",
+                            fontSize: "0.8rem",
+                            color: "var(--danger)",
+                            borderColor: "rgba(239, 68, 68, 0.4)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                          }}
+                          title="Eliminar menor del sistema"
+                        >
+                          <Trash2 size={14} /> Eliminar
+                        </button>
                       </td>
                     </tr>
                   );
@@ -650,6 +690,50 @@ export default function Acogida() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Eliminación */}
+      {menorAEliminar && (
+        <div className="modal-overlay" onClick={() => !eliminando && setMenorAEliminar(null)}>
+          <div className="modal-content" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ color: "var(--danger)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <AlertCircle size={20} /> Confirmar Eliminación
+              </h3>
+              <button
+                className="btn-icon"
+                onClick={() => setMenorAEliminar(null)}
+                disabled={eliminando}
+                type="button"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.9rem", lineHeight: "1.5" }}>
+              ¿Estás seguro de que deseas eliminar al menor <strong>"{menorAEliminar.nombre}"</strong> ({menorAEliminar.rut || "Sin RUT"})?
+              Esta acción no se puede deshacer y liberará su cupo si estaba asignado a una casa.
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "20px" }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setMenorAEliminar(null)}
+                disabled={eliminando}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ width: "auto", background: "var(--danger)", borderColor: "var(--danger)" }}
+                onClick={confirmarEliminar}
+                disabled={eliminando}
+              >
+                {eliminando ? "Eliminando..." : "Eliminar Menor"}
+              </button>
+            </div>
           </div>
         </div>
       )}

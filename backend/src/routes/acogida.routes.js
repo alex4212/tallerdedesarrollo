@@ -11,6 +11,8 @@ router.post('/menores', isAdmin, validateRut, acogidaController.ingresarMenor);
 
 router.post('/menores/:menorId/asignar-casa', isAdmin, acogidaController.asignarCasa);
 
+router.delete('/menores/:id', isAdmin, acogidaController.eliminarMenor);
+
 router.get('/turnos/activos', acogidaController.obtenerEducadorasTurnoActivo);
 
 router.get('/menores', acogidaController.obtenerMenores);

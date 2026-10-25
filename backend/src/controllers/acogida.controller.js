@@ -130,11 +130,54 @@ const obtenerEducadoras = async (req, res) => {
   }
 };
 
+const eliminarMenor = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const menorRes = await client.query('SELECT * FROM menores WHERE id = $1', [parseInt(id)]);
+      if (menorRes.rows.length === 0) {
+        throw new Error('Menor no encontrado');
+      }
+      const menor = menorRes.rows[0];
+
+      if (menor.casa_asignada_id) {
+        await client.query(
+          'UPDATE casas SET ocupacion_actual = GREATEST(0, ocupacion_actual - 1) WHERE id = $1',
+          [menor.casa_asignada_id]
+        );
+      }
+
+      await client.query('DELETE FROM menores WHERE id = $1', [parseInt(id)]);
+
+      await client.query('COMMIT');
+
+      res.json({
+        message: 'Menor eliminado exitosamente',
+        menorId: parseInt(id)
+      });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      res.status(400).json({ message: e.message });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor al eliminar menor' });
+  }
+};
+
 module.exports = {
   ingresarMenor,
   asignarCasa,
+  eliminarMenor,
   obtenerEducadorasTurnoActivo,
   obtenerMenores,
   obtenerCasas,
   obtenerEducadoras
 };
+
