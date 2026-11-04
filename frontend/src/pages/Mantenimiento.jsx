@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { fetchAPI } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import {
   Wrench,
   Clock,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function Mantenimiento() {
+  const toast = useToast();
   const [tareas, setTareas] = useState([]);
   const [casas, setCasas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,16 +102,18 @@ export default function Mantenimiento() {
           method: 'PUT',
           body: JSON.stringify({ descripcion, casaId: Number(casaId), fechaLimite, tipo })
         });
+        toast.success('Tarea de mantenimiento actualizada');
       } else {
         await fetchAPI('/mantenimiento/tareas', {
           method: 'POST',
           body: JSON.stringify({ casaId: Number(casaId), descripcion, tipo, fechaLimite })
         });
+        toast.success('Tarea de mantenimiento creada');
       }
       cerrarModal();
       cargarTareas();
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Error al guardar tarea');
     }
   };
 
@@ -119,9 +123,10 @@ export default function Mantenimiento() {
         method: 'PATCH',
         body: JSON.stringify({ estado: 'COMPLETADA' })
       });
+      toast.success('Tarea marcada como completada');
       cargarTareas();
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Error al actualizar estado');
     }
   };
 
@@ -129,10 +134,11 @@ export default function Mantenimiento() {
     if (!tareaAEliminar) return;
     try {
       await fetchAPI(`/mantenimiento/tareas/${tareaAEliminar.id}`, { method: 'DELETE' });
+      toast.success('Tarea eliminada exitosamente');
       setTareaAEliminar(null);
       cargarTareas();
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Error al eliminar tarea');
     }
   };
 

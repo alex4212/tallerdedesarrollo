@@ -10,8 +10,8 @@ describe('Pruebas E2E: Módulo de Acogida', () => {
 
   it('Flujo 1: Iniciar sesión y registrar a un menor', () => {
     // 1. Iniciar Sesión
-    cy.get('input[type="email"]').type("Ivresse.jorquera@aldeasinfantiles.cl");
-    cy.get('input[type="password"]').type("Ivresse Jorquera");
+    cy.get('input[type="email"]').type(emailAdmin);
+    cy.get('input[type="password"]').type(passAdmin);
     cy.get('button[type="submit"]').click();
 
     // Comprobar que entramos al sistema

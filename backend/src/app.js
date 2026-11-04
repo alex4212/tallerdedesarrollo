@@ -33,6 +33,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir archivos subidos (boletas, comprobantes, etc.)
+const uploadsPath = join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
+
 app.use('/api', indexRoutes);
 app.use('/api/acogida', acogidaRoutes);
 app.use('/api/auth', authRoutes);

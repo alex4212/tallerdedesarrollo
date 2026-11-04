@@ -1,6 +1,11 @@
 const validateRut = (req, res, next) => {
   const { rut } = req.body;
 
+  // Si es una actualización (PUT/PATCH) y no se envió rut, omitir validación
+  if (!rut && (req.method === 'PUT' || req.method === 'PATCH')) {
+    return next();
+  }
+
   if (!rut) {
     return res.status(400).json({ message: 'El RUT es obligatorio' });
   }
@@ -17,7 +22,6 @@ const validateRut = (req, res, next) => {
   if (!/^[0-9]+$/.test(body)) {
     return res.status(400).json({ message: 'El RUT ingresado no es válido' });
   }
-
 
   let sum = 0;
   let multiplier = 2;

@@ -1,5 +1,20 @@
 import { pool } from '../config/configDb.js';
 
+const subirComprobante = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No se ha subido ningún archivo' });
+  }
+
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.status(201).json({
+    message: 'Comprobante subido exitosamente',
+    url: fileUrl,
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    size: req.file.size
+  });
+};
+
 const registrarGasto = async (req, res) => {
   const { casaId, monto, descripcion, urlBoleta, categoria, establecimiento } = req.body;
 
@@ -104,4 +119,11 @@ const eliminarGasto = async (req, res) => {
   }
 };
 
-export { registrarGasto, obtenerGastos, actualizarEstadoGasto, actualizarGasto, eliminarGasto };
+export {
+  subirComprobante,
+  registrarGasto,
+  obtenerGastos,
+  actualizarEstadoGasto,
+  actualizarGasto,
+  eliminarGasto
+};

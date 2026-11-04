@@ -39,11 +39,15 @@ const setupDatabase = async () => {
         fecha_ingreso TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         casa_asignada_id INT REFERENCES casas(id) NULL,
         estado VARCHAR(50) DEFAULT 'Ingresado',
-        fecha_ingreso_casa TIMESTAMP NULL
+        fecha_ingreso_casa TIMESTAMP NULL,
+        fecha_egreso TIMESTAMP NULL,
+        motivo_egreso TEXT NULL
       );
     `);
 
     await pool.query(`ALTER TABLE menores ADD COLUMN IF NOT EXISTS fecha_ingreso_casa TIMESTAMP;`);
+    await pool.query(`ALTER TABLE menores ADD COLUMN IF NOT EXISTS fecha_egreso TIMESTAMP;`);
+    await pool.query(`ALTER TABLE menores ADD COLUMN IF NOT EXISTS motivo_egreso TEXT;`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS gastos (
@@ -70,9 +74,35 @@ const setupDatabase = async () => {
       );
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tareas_mantenimiento (
+        id SERIAL PRIMARY KEY,
+        casa_id INT REFERENCES casas(id) ON DELETE CASCADE,
+        descripcion TEXT NOT NULL,
+        estado VARCHAR(50) DEFAULT 'PENDIENTE',
+        fecha_limite VARCHAR(50) DEFAULT 'Sin fecha',
+        tipo VARCHAR(50) DEFAULT 'CORRECTIVO',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS turnos_educadoras (
+        id SERIAL PRIMARY KEY,
+        educadora_id INT REFERENCES educadoras(id) ON DELETE CASCADE,
+        casa_id INT REFERENCES casas(id) ON DELETE CASCADE,
+        fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+        horario VARCHAR(50) NOT NULL DEFAULT 'DIURNO',
+        tipo VARCHAR(50) NOT NULL DEFAULT 'TITULAR',
+        estado VARCHAR(50) NOT NULL DEFAULT 'ACTIVO',
+        observaciones TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Insertar usuarios por defecto si no existen
     const usuariosCount = await pool.query('SELECT COUNT(*) FROM usuarios');
-    if (parseInt(usuariosCount.rows[0].count) === 0) {
+    if (parseInt(usuariosCount.rows[0].count, 10) === 0) {
       const saltRounds = 10;
       const hashAdmin = await bcrypt.hash('Ivresse Jorquera', saltRounds);
       const hashEducadora = await bcrypt.hash('Maria Perez', saltRounds);
@@ -81,18 +111,19 @@ const setupDatabase = async () => {
         ($1, $2, $3, 'ADMIN', NULL),
         ($4, $5, $6, 'EDUCADORA', 1)
       `, [
-        'Ivresse Jorquera', 'Ivresse.jorquera@aldeasinfantiles.cl', hashAdmin,
+        'Ivresse Jorquera', 'ivresse.jorquera@aldeasinfantiles.cl', hashAdmin,
         'María Pérez',      'maria.perez@aldeasinfantiles.cl',      hashEducadora
       ]);
       console.log('>>> Usuarios por defecto creados con contraseñas hasheadas');
     }
-    // Agregar columnas nuevas si la tabla ya existía antes
+
+    // Agregar columnas nuevas a gastos si no existen
     await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS categoria VARCHAR(50) DEFAULT 'COMESTIBLES';`);
     await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS establecimiento VARCHAR(100);`);
 
     // Insertar casas por defecto si no existen
     const casasCount = await pool.query('SELECT COUNT(*) FROM casas');
-    if (parseInt(casasCount.rows[0].count) === 0) {
+    if (parseInt(casasCount.rows[0].count, 10) === 0) {
       await pool.query(`
         INSERT INTO casas (id, nombre, capacidad, ocupacion_actual) VALUES
         (1, 'Casa 1', 5, 0),
@@ -105,8 +136,9 @@ const setupDatabase = async () => {
       console.log('>>> Casas por defecto creadas');
     }
 
+    // Insertar educadoras por defecto si no existen
     const educadorasCount = await pool.query('SELECT COUNT(*) FROM educadoras');
-    if (parseInt(educadorasCount.rows[0].count) === 0) {
+    if (parseInt(educadorasCount.rows[0].count, 10) === 0) {
       await pool.query(`
         INSERT INTO educadoras (id, nombre, rol, casa_id) VALUES
         (1, 'María Pérez', 'Encargada de Casa', 1),
@@ -119,7 +151,31 @@ const setupDatabase = async () => {
       console.log('>>> Educadoras por defecto creadas');
     }
 
-    console.log('>>> Tablas de acogida inicializadas correctamente');
+    // Insertar tarea de mantenimiento inicial si no existe
+    const tareasCount = await pool.query('SELECT COUNT(*) FROM tareas_mantenimiento');
+    if (parseInt(tareasCount.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO tareas_mantenimiento (casa_id, descripcion, estado, fecha_limite, tipo)
+        VALUES (1, 'Reparar llave de agua del baño', 'PENDIENTE', '2026-10-01', 'CORRECTIVO');
+      `);
+      console.log('>>> Tareas de mantenimiento iniciales creadas');
+    }
+
+    // Insertar turnos de educadoras si no existen
+    const turnosCount = await pool.query('SELECT COUNT(*) FROM turnos_educadoras');
+    if (parseInt(turnosCount.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO turnos_educadoras (educadora_id, casa_id, fecha, horario, tipo, estado, observaciones) VALUES
+        (1, 1, CURRENT_DATE, 'DIURNO',   'TITULAR',   'ACTIVO', 'Turno regular Casa 1'),
+        (2, 2, CURRENT_DATE, 'DIURNO',   'TITULAR',   'ACTIVO', 'Turno regular Casa 2'),
+        (3, 3, CURRENT_DATE, 'NOCTURNO', 'TITULAR',   'ACTIVO', 'Guardia nocturna Casa 3'),
+        (4, 4, CURRENT_DATE, 'COMPLETO', 'REEMPLAZO', 'ACTIVO', 'Reemplazo jornada completa Casa 4'),
+        (5, 5, CURRENT_DATE, 'DIURNO',   'TITULAR',   'ACTIVO', 'Turno regular Casa 5');
+      `);
+      console.log('>>> Turnos iniciales de educadoras creados');
+    }
+
+    console.log('>>> Tablas del sistema inicializadas correctamente');
   } catch (error) {
     console.error('Error inicializando las tablas:', error);
   }

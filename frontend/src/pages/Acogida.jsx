@@ -20,6 +20,7 @@ import {
   Clock,
   ChevronRight,
   ShieldAlert,
+  Trash2,
 } from "lucide-react";
 
 // Posiciones simétricas y espaciadas para exactamente 5 casas (pentágono / estrella alrededor de la plaza)
@@ -57,6 +58,7 @@ export default function Acogida() {
   const [menorSeleccionado, setMenorSeleccionado] = useState("");
   const [casaSeleccionada, setCasaSeleccionada] = useState("");
   const [asignandoId, setAsignandoId] = useState(null);
+  const [menorAEliminar, setMenorAEliminar] = useState(null);
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -93,8 +95,24 @@ export default function Acogida() {
   const totalDisponible = Math.max(0, totalCapacidad - totalOcupados);
   const menoresSinCasa = menores.filter((m) => !m.casaAsignadaId).length;
 
-  const registrarMenor = async (e) => {
+    const registrarMenor = async (e) => {
     e.preventDefault();
+
+    const rutLimpio = rutMenor.trim().toLowerCase();
+    const folioLimpio = ordenTribunal.trim().toLowerCase();
+
+    const rutDuplicado = menores.find((m) => (m.rut || '').trim().toLowerCase() === rutLimpio);
+    if (rutDuplicado) {
+      alert(`El RUT "${rutMenor.trim()}" ya está registrado para el menor ${rutDuplicado.nombre}.`);
+      return;
+    }
+
+    const folioDuplicado = menores.find((m) => (m.folioLegal || '').trim().toLowerCase() === folioLimpio);
+    if (folioDuplicado) {
+      alert(`El Folio Legal "${ordenTribunal.trim()}" ya está registrado para el menor ${folioDuplicado.nombre}.`);
+      return;
+    }
+
     try {
       await fetchAPI("/acogida/menores", {
         method: "POST",
@@ -154,6 +172,18 @@ export default function Acogida() {
   };
 
   // Abrir el resumen integral de la casa
+    const eliminarMenor = async () => {
+    if (!menorAEliminar) return;
+    try {
+      await fetchAPI(`/acogida/menores/${menorAEliminar.id}`, { method: 'DELETE' });
+      setMenorAEliminar(null);
+      await cargarDatos();
+    } catch (err) {
+      alert(err.message || 'Error al eliminar menor');
+      setMenorAEliminar(null);
+    }
+  };
+
   const abrirResumenCasa = (casa) => {
     setCasaResumen(casa);
     setShowModalResumen(true);
@@ -402,18 +432,19 @@ export default function Acogida() {
                 <th>Folio Legal</th>
                 <th>Casa Asignada</th>
                 <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center" style={{ padding: "24px" }}>
+                  <td colSpan="6" className="text-center" style={{ padding: "24px" }}>
                     Cargando datos...
                   </td>
                 </tr>
               ) : menores.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center" style={{ padding: "24px" }}>
+                  <td colSpan="6" className="text-center" style={{ padding: "24px" }}>
                     No hay menores registrados.
                   </td>
                 </tr>
@@ -458,10 +489,21 @@ export default function Acogida() {
                           </span>
                         )}
                       </td>
-                      <td>
+                                            <td>
                         <span className={`badge ${esSinAsignar ? "pendiente" : "aprobado"}`}>
                           {esSinAsignar ? "Sin asignar" : (m.estado || "Asignado a Casa")}
                         </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          title="Eliminar menor del sistema"
+                          style={{ padding: "5px 10px", color: "var(--danger)", borderColor: "rgba(239,68,68,0.4)", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem" }}
+                          onClick={() => setMenorAEliminar(m)}
+                        >
+                          <Trash2 size={14} /> Eliminar
+                        </button>
                       </td>
                     </tr>
                   );
@@ -1057,6 +1099,34 @@ export default function Acogida() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {menorAEliminar && (
+        <div className="modal-overlay" onClick={() => setMenorAEliminar(null)}>
+          <div className="modal-content" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ color: "var(--danger)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Trash2 size={20} /> Eliminar Menor
+              </h3>
+              <button className="btn-icon" onClick={() => setMenorAEliminar(null)} type="button">
+                <X size={20} color="#ffffff" />
+              </button>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.9rem", lineHeight: "1.5" }}>
+              ¿Eliminar a <strong>{menorAEliminar.nombre}</strong> (RUT: {menorAEliminar.rut || "N/A"}) del sistema? Esta acción no se puede revertir.
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "20px" }}>
+              <button type="button" className="btn-secondary" onClick={() => setMenorAEliminar(null)}>Cancelar</button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ width: "auto", background: "var(--danger)", borderColor: "var(--danger)" }}
+                onClick={eliminarMenor}
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}
