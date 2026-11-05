@@ -15,7 +15,6 @@ export const fetchAPI = async (endpoint, options = {}) => {
     ...options.headers,
   };
 
-
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
@@ -24,7 +23,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    // Solo redirigir si no estamos en el endpoint de login y el token es inválido/expiró
+    // Solo redirigir a login si el token expiró o es inválido (no en el intento de login)
     if (!endpoint.includes('/auth/login') && (response.status === 401 || (response.status === 403 && data.message === 'Token inválido'))) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

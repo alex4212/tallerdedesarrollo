@@ -3,10 +3,12 @@ const CATEGORIAS_VALIDAS = ['COMESTIBLES', 'ASEO_Y_LIMPIEZA'];
 const validateExpense = (req, res, next) => {
   const { casaId, monto, descripcion, categoria } = req.body;
 
-  if (!casaId || typeof casaId !== 'number') {
-    return res.status(400).json({ message: 'casaId es requerido y debe ser un número' });
+  const casaIdNum = Number(casaId);
+  if (!casaId || isNaN(casaIdNum) || casaIdNum <= 0) {
+    return res.status(400).json({ message: 'casaId es requerido y debe ser un número válido' });
   }
-  if (!monto || typeof monto !== 'number' || monto <= 0) {
+  const montoNum = Number(monto);
+  if (!monto || isNaN(montoNum) || montoNum <= 0) {
     return res.status(400).json({ message: 'monto es requerido y debe ser un número mayor a 0' });
   }
   if (!descripcion || typeof descripcion !== 'string' || descripcion.trim() === '') {
@@ -15,6 +17,10 @@ const validateExpense = (req, res, next) => {
   if (categoria && !CATEGORIAS_VALIDAS.includes(categoria)) {
     return res.status(400).json({ message: `Categoría inválida. Use: ${CATEGORIAS_VALIDAS.join(' o ')}` });
   }
+
+  // Normalizar a número para que el controlador no falle
+  req.body.casaId = casaIdNum;
+  req.body.monto = montoNum;
 
   next();
 };

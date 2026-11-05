@@ -1,67 +1,102 @@
-let tareas = [
-  { id: 1, casaId: 1, descripcion: 'Reparar llave de agua del baño', estado: 'PENDIENTE', fechaLimite: '2026-10-01', tipo: 'CORRECTIVO' }
-];
+import { pool } from '../config/configDb.js';
 
-const crearTarea = (req, res) => {
+const crearTarea = async (req, res) => {
   const { casaId, descripcion, fechaLimite, tipo } = req.body;
 
-  const nuevaTarea = {
-    id: tareas.length + 1,
-    casaId,
-    descripcion,
-    estado: 'PENDIENTE',
-    fechaLimite: fechaLimite || 'Sin fecha',
-    tipo: tipo || 'CORRECTIVO'
-  };
-
-  tareas.push(nuevaTarea);
-
-  res.status(201).json({
-    message: 'Tarea de mantenimiento creada exitosamente',
-    tarea: nuevaTarea
-  });
+  try {
+    const result = await pool.query(
+      `INSERT INTO tareas_mantenimiento (casa_id, descripcion, estado, fecha_limite, tipo)
+       VALUES ($1, $2, 'PENDIENTE', $3, $4)
+       RETURNING *, casa_id AS "casaId", fecha_limite AS "fechaLimite"`,
+      [casaId, descripcion, fechaLimite || 'Sin fecha', tipo || 'CORRECTIVO']
+    );
+    res.status(201).json({
+      message: 'Tarea de mantenimiento creada exitosamente',
+      tarea: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error al crear tarea:', error);
+    res.status(500).json({ message: 'Error al crear tarea' });
+  }
 };
 
-const obtenerTareas = (req, res) => {
-  res.json(tareas);
+const obtenerTareas = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT *, casa_id AS "casaId", fecha_limite AS "fechaLimite"
+       FROM tareas_mantenimiento ORDER BY created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener tareas:', error);
+    res.status(500).json({ message: 'Error al obtener tareas' });
+  }
 };
 
-const actualizarEstadoTarea = (req, res) => {
+const actualizarEstadoTarea = async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
 
-  const tarea = tareas.find(t => t.id === parseInt(id));
-
-  if (!tarea) {
-    return res.status(404).json({ message: 'Tarea no encontrada' });
+  try {
+    const result = await pool.query(
+      `UPDATE tareas_mantenimiento SET estado = $1 WHERE id = $2
+       RETURNING *, casa_id AS "casaId", fecha_limite AS "fechaLimite"`,
+      [estado, parseInt(id)]
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: 'Tarea no encontrada' });
+    res.json({ message: `Estado actualizado a ${estado}`, tarea: result.rows[0] });
+  } catch (error) {
+    console.error('Error al actualizar estado:', error);
+    res.status(500).json({ message: 'Error al actualizar estado de tarea' });
   }
-
-  tarea.estado = estado;
-
-  res.json({
-    message: `Estado de la tarea actualizado a ${estado}`,
-    tarea
-  });
 };
 
-const actualizarTarea = (req, res) => {
+const actualizarTarea = async (req, res) => {
   const { id } = req.params;
   const { descripcion, casaId, fechaLimite, tipo } = req.body;
-  const tarea = tareas.find(t => t.id === parseInt(id));
-  if (!tarea) return res.status(404).json({ message: 'Tarea no encontrada' });
-  if (descripcion) tarea.descripcion = descripcion;
-  if (casaId) tarea.casaId = casaId;
-  if (fechaLimite !== undefined) tarea.fechaLimite = fechaLimite;
-  if (tipo) tarea.tipo = tipo;
-  res.json({ message: 'Tarea actualizada', tarea });
+
+  try {
+    const actual = await pool.query('SELECT * FROM tareas_mantenimiento WHERE id = $1', [parseInt(id)]);
+    if (actual.rows.length === 0)
+      return res.status(404).json({ message: 'Tarea no encontrada' });
+
+    const t = actual.rows[0];
+    const result = await pool.query(
+      `UPDATE tareas_mantenimiento
+       SET descripcion = $1, casa_id = $2, fecha_limite = $3, tipo = $4
+       WHERE id = $5
+       RETURNING *, casa_id AS "casaId", fecha_limite AS "fechaLimite"`,
+      [
+        descripcion || t.descripcion,
+        casaId || t.casa_id,
+        fechaLimite !== undefined ? fechaLimite : t.fecha_limite,
+        tipo || t.tipo,
+        parseInt(id)
+      ]
+    );
+    res.json({ message: 'Tarea actualizada', tarea: result.rows[0] });
+  } catch (error) {
+    console.error('Error al actualizar tarea:', error);
+    res.status(500).json({ message: 'Error al actualizar tarea' });
+  }
 };
 
-const eliminarTarea = (req, res) => {
+const eliminarTarea = async (req, res) => {
   const { id } = req.params;
-  const index = tareas.findIndex(t => t.id === parseInt(id));
-  if (index === -1) return res.status(404).json({ message: 'Tarea no encontrada' });
-  tareas.splice(index, 1);
-  res.json({ message: 'Tarea eliminada' });
+  try {
+    const result = await pool.query(
+      'DELETE FROM tareas_mantenimiento WHERE id = $1 RETURNING id',
+      [parseInt(id)]
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: 'Tarea no encontrada' });
+    res.json({ message: 'Tarea eliminada' });
+  } catch (error) {
+    console.error('Error al eliminar tarea:', error);
+    res.status(500).json({ message: 'Error al eliminar tarea' });
+  }
 };
 
 export { crearTarea, obtenerTareas, actualizarEstadoTarea, actualizarTarea, eliminarTarea };
+

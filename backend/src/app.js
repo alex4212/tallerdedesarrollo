@@ -39,11 +39,11 @@ app.use(express.urlencoded({ extended: true }));
 const uploadsPath = join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsPath));
 
-app.use('/api', indexRoutes);
 app.use('/api/acogida', acogidaRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
+app.use('/api', indexRoutes);
 
 // Servir estáticos del frontend si existen
 const frontendDistPath = join(__dirname, '../../frontend/dist');
