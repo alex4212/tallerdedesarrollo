@@ -42,6 +42,7 @@ jobs:
             echo "Advertencia: ~/backend.env no existe en el home del runner"
           fi
 
+          
       - name: Instalar dependencias del Backend
         run: |
           cd backend
