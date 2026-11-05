@@ -7,6 +7,7 @@ const SECRET_KEY = JWT_SECRET || 'aldeas_sos_jwt_secret_key_2026';
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log('>>> [AUTH] Intento de login recibido para:', email);
 
   if (!email || !password) {
     return res.status(400).json({ message: 'El correo y la contraseña son obligatorios' });
@@ -20,14 +21,30 @@ const login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+      console.warn('>>> [AUTH] Usuario no encontrado en BD:', normalizedEmail);
+      return res.status(401).json({ message: 'Credenciales inválidas: correo no registrado' });
     }
 
     const user = result.rows[0];
 
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    let passwordMatch = false;
+    try {
+      passwordMatch = await bcrypt.compare(password, user.password_hash);
+    } catch (bcryptErr) {
+      console.error('>>> [AUTH] Error comparando hash:', bcryptErr.message);
+    }
+
+    // Fallback: si la contraseña en BD fue guardada en texto plano en migraciones anteriores
+    if (!passwordMatch && user.password_hash === password) {
+      console.log('>>> [AUTH] Contraseña coincidió con texto plano. Actualizando hash a bcrypt...');
+      passwordMatch = true;
+      const newHash = await bcrypt.hash(password, 10);
+      await pool.query('UPDATE usuarios SET password_hash = $1 WHERE id = $2', [newHash, user.id]);
+    }
+
     if (!passwordMatch) {
-      return res.status(401).json({ message: 'Credenciales inválidas' });
+      console.warn('>>> [AUTH] Contraseña incorrecta para:', normalizedEmail);
+      return res.status(401).json({ message: 'Credenciales inválidas: contraseña incorrecta' });
     }
 
     const userPayload = {
@@ -40,14 +57,15 @@ const login = async (req, res) => {
 
     const token = jwt.sign(userPayload, SECRET_KEY, { expiresIn: '24h' });
 
+    console.log('>>> [AUTH] Login exitoso para:', normalizedEmail, 'Rol:', user.role);
     res.json({
       message: 'Inicio de sesión exitoso',
       user: userPayload,
       token
     });
   } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({ message: 'Error en el servidor' });
+    console.error('>>> [AUTH] Error inesperado en login:', error);
+    res.status(500).json({ message: 'Error en el servidor al procesar el inicio de sesión' });
   }
 };
 

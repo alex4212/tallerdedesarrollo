@@ -13,9 +13,20 @@ const PORT = process.env.PORT || 1626;
 connectDB()
   .then(async () => {
     await setupDatabase();
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
     });
+
+    const handleShutdown = () => {
+      console.log(`Cerrando servidor en puerto ${PORT}...`);
+      server.close(() => {
+        console.log('Servidor Express detenido.');
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', handleShutdown);
+    process.on('SIGINT', handleShutdown);
   })
   .catch((err) => {
     console.error('No se pudo iniciar el servidor:', err.message);

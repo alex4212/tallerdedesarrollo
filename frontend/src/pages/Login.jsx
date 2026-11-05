@@ -33,6 +33,7 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard/inicio');
     } catch (err) {
+      console.error('Error durante el inicio de sesión:', err);
       setError(err.message || 'Credenciales inválidas');
     } finally {
       setLoading(false);

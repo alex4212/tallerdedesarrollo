@@ -1,8 +1,10 @@
 export const API_URL =
   import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-    ? 'http://146.83.198.35:1626/api'
-    : 'http://localhost:3001/api');
+  (typeof window !== 'undefined'
+    ? (window.location.port === '1626'
+        ? '/api'
+        : `${window.location.protocol}//${window.location.hostname}:1626/api`)
+    : 'http://localhost:1626/api');
 
 export const BACKEND_URL = API_URL.replace(/\/api\/?$/, '');
 
@@ -20,7 +22,15 @@ export const fetchAPI = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  let data;
+  if (contentType.includes('application/json')) {
+    data = await response.json().catch(() => ({}));
+  } else {
+    const rawText = await response.text();
+    console.warn(`Respuesta no JSON de ${endpoint} (HTTP ${response.status}):`, rawText.substring(0, 200));
+    data = { message: `Respuesta inesperada del servidor (HTTP ${response.status})` };
+  }
 
   if (!response.ok) {
     // Solo redirigir a login si el token expiró o es inválido (no en el intento de login)
@@ -32,7 +42,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
         window.location.href = '/login';
       }
     }
-    throw new Error(data.message || 'Error en la petición al servidor');
+    throw new Error(data.message || `Error del servidor (${response.status})`);
   }
 
   return data;

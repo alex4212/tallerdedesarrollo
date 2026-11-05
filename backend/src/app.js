@@ -13,23 +13,8 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  process.env.CORS_ORIGIN,
-  'http://146.83.198.35:1626',
-  'http://146.83.198.35',
-].filter(Boolean);
-
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    return callback(new Error('Bloqueado por política CORS'));
-  },
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());
@@ -44,6 +29,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/sostenibilidad', sostenibilidadRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 app.use('/api', indexRoutes);
+
+// Manejador 404 para cualquier ruta /api no encontrada (siempre devuelve JSON)
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ message: `Ruta API no encontrada: ${req.method} ${req.originalUrl}` });
+});
 
 // Servir estáticos del frontend si existen
 const frontendDistPath = join(__dirname, '../../frontend/dist');

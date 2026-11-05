@@ -54,5 +54,8 @@ jobs:
 
       - name: Reiniciar Backend con PM2
         run: |
+          # Liberar puerto 1626 si algún proceso huérfano quedó bloqueándolo
+          fuser -k 1626/tcp || true
+          sleep 2
           npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
           npx pm2 save

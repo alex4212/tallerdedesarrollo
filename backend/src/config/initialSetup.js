@@ -101,20 +101,26 @@ const setupDatabase = async () => {
     `);
 
     // Insertar usuarios por defecto si no existen
-    const usuariosCount = await pool.query('SELECT COUNT(*) FROM usuarios');
-    if (parseInt(usuariosCount.rows[0].count, 10) === 0) {
-      const saltRounds = 10;
-      const hashAdmin = await bcrypt.hash('Ivresse Jorquera', saltRounds);
-      const hashEducadora = await bcrypt.hash('Maria Perez', saltRounds);
+    const adminEmail = 'ivresse.jorquera@aldeasinfantiles.cl';
+    const adminCheck = await pool.query('SELECT id FROM usuarios WHERE LOWER(email) = $1', [adminEmail]);
+    if (adminCheck.rows.length === 0) {
+      const hashAdmin = await bcrypt.hash('Ivresse Jorquera', 10);
       await pool.query(`
         INSERT INTO usuarios (nombre, email, password_hash, role, casa_id) VALUES
-        ($1, $2, $3, 'ADMIN', NULL),
-        ($4, $5, $6, 'EDUCADORA', 1)
-      `, [
-        'Ivresse Jorquera', 'ivresse.jorquera@aldeasinfantiles.cl', hashAdmin,
-        'María Pérez',      'maria.perez@aldeasinfantiles.cl',      hashEducadora
-      ]);
-      console.log('>>> Usuarios por defecto creados con contraseñas hasheadas');
+        ($1, $2, $3, 'ADMIN', NULL)
+      `, ['Ivresse Jorquera', adminEmail, hashAdmin]);
+      console.log('>>> Usuario Administrador (ivresse.jorquera@aldeasinfantiles.cl) garantizado');
+    }
+
+    const eduEmail = 'maria.perez@aldeasinfantiles.cl';
+    const eduCheck = await pool.query('SELECT id FROM usuarios WHERE LOWER(email) = $1', [eduEmail]);
+    if (eduCheck.rows.length === 0) {
+      const hashEdu = await bcrypt.hash('Maria Perez', 10);
+      await pool.query(`
+        INSERT INTO usuarios (nombre, email, password_hash, role, casa_id) VALUES
+        ($1, $2, $3, 'EDUCADORA', 1)
+      `, ['María Pérez', eduEmail, hashEdu]);
+      console.log('>>> Usuario Educadora (maria.perez@aldeasinfantiles.cl) garantizado');
     }
 
     // Agregar columnas nuevas a gastos si no existen
