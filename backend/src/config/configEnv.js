@@ -6,10 +6,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config({ path: join(__dirname, '.env'), override: true });
-dotenv.config({ path: join(__dirname, '../.env'), override: false });
-dotenv.config({ path: join(__dirname, '../../.env'), override: false });
-dotenv.config({ path: join(process.cwd(), '.env'), override: false });
-dotenv.config({ path: join(process.cwd(), 'src/config/.env'), override: false });
 
 const readEnv = (key, fallback = "") => {
   const value = process.env[key];
@@ -17,8 +13,8 @@ const readEnv = (key, fallback = "") => {
   return fallback;
 };
 
-const PORT = parseInt(readEnv("PORT", "1626"), 10) || 1626;
-const HOST = readEnv("HOST", "0.0.0.0");
+const PORT = parseInt(readEnv("PORT"), 10);
+const HOST = readEnv("HOST");
 const DB_USERNAME = readEnv("DB_USERNAME");
 const DB_PASSWORD = readEnv("DB_PASSWORD");
 const DB_DATABASE = readEnv("DB_DATABASE");
