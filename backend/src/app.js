@@ -21,6 +21,8 @@ const allowedOrigins = [
   'http://146.83.198.35:1626',
 ].filter(Boolean);
 
+
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
