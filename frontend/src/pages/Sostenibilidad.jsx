@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { fetchAPI } from '../services/api';
+import { fetchAPI, API_URL, BACKEND_URL } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import {
   DollarSign,
@@ -151,7 +151,7 @@ export default function Sostenibilidad() {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('boleta', file);
-      const response = await fetch('http://localhost:3001/api/sostenibilidad/upload', {
+      const response = await fetch(`${API_URL}/sostenibilidad/upload`, {
         method: 'POST',
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
         body: formData
@@ -610,7 +610,7 @@ export default function Sostenibilidad() {
 
                           {g.urlBoleta ? (
                             <a
-                              href={g.urlBoleta.startsWith('http') ? g.urlBoleta : `http://localhost:3001${g.urlBoleta}`} target="_blank" rel="noreferrer"
+                              href={g.urlBoleta.startsWith('http') ? g.urlBoleta : `${BACKEND_URL}${g.urlBoleta}`} target="_blank" rel="noreferrer"
                               style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', padding: '2px 8px', background: 'rgba(99,102,241,0.15)', color: '#818cf8', borderRadius: '6px', textDecoration: 'none', border: '1px solid rgba(99,102,241,0.3)' }}
                             >
                               <FileText size={12} /> Ver Boleta <ExternalLink size={11} />
