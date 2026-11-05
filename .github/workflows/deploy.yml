@@ -33,9 +33,9 @@ jobs:
           npm install
           npm run build
 
-      - name: Desplegar Frontend con PM2
+      - name: Eliminar proceso api-frontend conflictivo de PM2
         run: |
-          npx pm2 restart api-frontend || npx pm2 serve ./frontend/dist 80 --name "api-frontend" --spa
+          npx pm2 delete api-frontend 2>/dev/null || true
           npx pm2 save
 
       - name: Inyectar variables de entorno Backend
