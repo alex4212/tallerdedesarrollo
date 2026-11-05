@@ -14,6 +14,11 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Inyectar variables de entorno Frontend
         run: |
           if [ -f ~/frontend.env ]; then
@@ -24,18 +29,9 @@ jobs:
 
       - name: Instalar y construir Frontend
         run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           cd frontend
           npm install
           npm run build
-
-      - name: Instalar dependencias del Backend
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          cd backend
-          npm install
 
       - name: Inyectar variables de entorno Backend
         run: |
@@ -46,10 +42,12 @@ jobs:
             echo "Advertencia: ~/backend.env no existe en el home del runner"
           fi
 
+      - name: Instalar dependencias del Backend
+        run: |
+          cd backend
+          npm install
+
       - name: Reiniciar Backend con PM2
         run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          setsid pm2 restart api-backend || setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name "api-backend"
-          pm2 save
-
+          npx pm2 restart api-backend || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
+          npx pm2 save
