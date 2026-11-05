@@ -8,7 +8,7 @@ import { setupDatabase } from './config/initialSetup.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 1626;
 
 connectDB()
   .then(async () => {
