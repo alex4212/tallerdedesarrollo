@@ -22,7 +22,6 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 
-
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
