@@ -100,6 +100,21 @@ const setupDatabase = async () => {
       );
     `);
 
+    // Insertar casas por defecto si no existen antes de asignar usuarios a casas
+    const casasCount = await pool.query('SELECT COUNT(*) FROM casas');
+    if (parseInt(casasCount.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO casas (id, nombre, capacidad, ocupacion_actual) VALUES
+        (1, 'Casa 1', 5, 0),
+        (2, 'Casa 2', 5, 0),
+        (3, 'Casa 3', 5, 0),
+        (4, 'Casa 4', 5, 0),
+        (5, 'Casa 5', 5, 0);
+      `);
+      await pool.query("SELECT setval('casas_id_seq', (SELECT MAX(id) FROM casas));");
+      console.log('>>> Casas por defecto creadas');
+    }
+
     // Insertar usuarios por defecto si no existen
     const adminEmail = 'ivresse.jorquera@aldeasinfantiles.cl';
     const adminCheck = await pool.query('SELECT id FROM usuarios WHERE LOWER(email) = $1', [adminEmail]);
@@ -121,25 +136,6 @@ const setupDatabase = async () => {
         ($1, $2, $3, 'EDUCADORA', 1)
       `, ['María Pérez', eduEmail, hashEdu]);
       console.log('>>> Usuario Educadora (maria.perez@aldeasinfantiles.cl) garantizado');
-    }
-
-    // Agregar columnas nuevas a gastos si no existen
-    await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS categoria VARCHAR(50) DEFAULT 'COMESTIBLES';`);
-    await pool.query(`ALTER TABLE gastos ADD COLUMN IF NOT EXISTS establecimiento VARCHAR(100);`);
-
-    // Insertar casas por defecto si no existen
-    const casasCount = await pool.query('SELECT COUNT(*) FROM casas');
-    if (parseInt(casasCount.rows[0].count, 10) === 0) {
-      await pool.query(`
-        INSERT INTO casas (id, nombre, capacidad, ocupacion_actual) VALUES
-        (1, 'Casa 1', 5, 0),
-        (2, 'Casa 2', 5, 0),
-        (3, 'Casa 3', 5, 0),
-        (4, 'Casa 4', 5, 0),
-        (5, 'Casa 5', 5, 0);
-      `);
-      await pool.query("SELECT setval('casas_id_seq', (SELECT MAX(id) FROM casas));");
-      console.log('>>> Casas por defecto creadas');
     }
 
     // Insertar educadoras por defecto si no existen

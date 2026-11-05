@@ -13,8 +13,8 @@ const readEnv = (key, fallback = "") => {
   return fallback;
 };
 
-const PORT = parseInt(readEnv("PORT"), 10);
-const HOST = readEnv("HOST");
+const PORT = parseInt(readEnv("PORT", "1626"), 10) || 1626;
+const HOST = readEnv("HOST", "0.0.0.0");
 const DB_USERNAME = readEnv("DB_USERNAME");
 const DB_PASSWORD = readEnv("DB_PASSWORD");
 const DB_DATABASE = readEnv("DB_DATABASE");
