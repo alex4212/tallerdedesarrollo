@@ -59,6 +59,9 @@ jobs:
 
       - name: Desplegar Frontend con PM2 en puerto 3000
         run: |
+          # Eliminar api-frontend primero para forzar arranque limpio en 3000
+          npx pm2 delete api-frontend 2>/dev/null || true
+          sleep 1
           # api-frontend SIEMPRE en puerto 3000, nunca en 1626
           npx pm2 serve ./frontend/dist 3000 --name "api-frontend" --spa
           npx pm2 save
