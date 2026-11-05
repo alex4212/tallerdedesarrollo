@@ -49,5 +49,6 @@ jobs:
 
       - name: Reiniciar Backend con PM2
         run: |
-          npx pm2 restart api-backend || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
+          npx pm2 delete api-frontend 2>/dev/null || true
+          npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
           npx pm2 save
