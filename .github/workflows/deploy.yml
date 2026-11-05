@@ -33,11 +33,6 @@ jobs:
           npm install
           npm run build
 
-      - name: Desplegar Frontend con PM2
-        run: |
-          npx pm2 delete api-frontend 2>/dev/null || true
-          npx pm2 serve ./frontend/dist 80 --name "api-frontend" --spa || npx pm2 serve ./frontend/dist 3000 --name "api-frontend" --spa
-
       - name: Inyectar variables de entorno Backend
         run: |
           mkdir -p ./backend/src/config
@@ -54,8 +49,15 @@ jobs:
 
       - name: Reiniciar Backend con PM2 en puerto 1626
         run: |
-          # Liberar puerto 1626 si algún proceso huérfano quedó bloqueándolo
-          fuser -k 1626/tcp || true
+          # Eliminar api-frontend por si ocupa el 1626 de un deploy anterior
+          npx pm2 delete api-frontend 2>/dev/null || true
+          # Liberar el puerto 1626 de cualquier proceso huérfano
+          fuser -k 1626/tcp 2>/dev/null || true
           sleep 2
           npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
+
+      - name: Desplegar Frontend con PM2 en puerto 3000
+        run: |
+          # api-frontend SIEMPRE en puerto 3000, nunca en 1626
+          npx pm2 serve ./frontend/dist 3000 --name "api-frontend" --spa
           npx pm2 save
