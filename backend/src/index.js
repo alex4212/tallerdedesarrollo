@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 1626;
 connectDB()
   .then(async () => {
     await setupDatabase();
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })
