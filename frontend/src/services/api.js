@@ -15,6 +15,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
     ...options.headers,
   };
 
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
