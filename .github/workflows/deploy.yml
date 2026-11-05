@@ -33,10 +33,10 @@ jobs:
           npm install
           npm run build
 
-      - name: Eliminar proceso api-frontend conflictivo de PM2
+      - name: Desplegar Frontend con PM2
         run: |
           npx pm2 delete api-frontend 2>/dev/null || true
-          npx pm2 save
+          npx pm2 serve ./frontend/dist 3000 --name "api-frontend" --spa
 
       - name: Inyectar variables de entorno Backend
         run: |
@@ -52,7 +52,7 @@ jobs:
           cd backend
           npm install
 
-      - name: Reiniciar Backend con PM2
+      - name: Reiniciar Backend con PM2 en puerto 1626
         run: |
           # Liberar puerto 1626 si algún proceso huérfano quedó bloqueándolo
           fuser -k 1626/tcp || true
