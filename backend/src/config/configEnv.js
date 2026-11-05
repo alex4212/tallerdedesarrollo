@@ -6,6 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config({ path: join(__dirname, '.env'), override: true });
+dotenv.config({ path: join(__dirname, '../.env'), override: false });
+dotenv.config({ path: join(__dirname, '../../.env'), override: false });
+dotenv.config({ path: join(process.cwd(), '.env'), override: false });
+dotenv.config({ path: join(process.cwd(), 'src/config/.env'), override: false });
 
 const readEnv = (key, fallback = "") => {
   const value = process.env[key];
