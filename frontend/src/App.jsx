@@ -14,14 +14,23 @@ const isTokenValid = () => {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1]));
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
     if (payload.exp && payload.exp * 1000 < Date.now()) {
+      console.warn('Token expirado');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       return false;
     }
     return true;
-  } catch {
+  } catch (err) {
+    console.error('Error validando token en PrivateRoute:', err);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     return false;

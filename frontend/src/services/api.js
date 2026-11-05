@@ -24,10 +24,12 @@ export const fetchAPI = async (endpoint, options = {}) => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401 || (response.status === 403 && data.message === 'Token inválido')) {
+    // Solo redirigir si no estamos en el endpoint de login y el token es inválido/expiró
+    if (!endpoint.includes('/auth/login') && (response.status === 401 || (response.status === 403 && data.message === 'Token inválido'))) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
+      const currentPath = window.location.pathname.replace(/\/$/, '');
+      if (currentPath !== '/login') {
         window.location.href = '/login';
       }
     }

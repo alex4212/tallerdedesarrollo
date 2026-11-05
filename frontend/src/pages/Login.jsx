@@ -20,15 +20,22 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
+      console.log('Enviando petición de login a la API...');
       const data = await fetchAPI('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: email.trim(), password })
       });
 
+      console.log('Respuesta recibida:', data);
+      if (!data.token) {
+        throw new Error(data.message || 'No se recibió token del servidor');
+      }
+
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard/inicio');
     } catch (err) {
+      console.error('Fallo en el login:', err);
       setError(err.message || 'Credenciales inválidas');
     } finally {
       setLoading(false);
