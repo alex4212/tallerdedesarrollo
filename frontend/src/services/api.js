@@ -1,6 +1,8 @@
 export const API_URL =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'http://146.83.198.35:1626/api'
+    : 'http://localhost:3001/api');
 
 export const BACKEND_URL = API_URL.replace(/\/api\/?$/, '');
 
