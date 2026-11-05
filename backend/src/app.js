@@ -19,6 +19,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   process.env.CORS_ORIGIN,
   'http://146.83.198.35:1626',
+  'http://146.83.198.35',
 ].filter(Boolean);
 
 
