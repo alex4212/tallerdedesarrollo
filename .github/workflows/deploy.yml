@@ -40,7 +40,11 @@ jobs:
             cp ~/backend.env ./backend/src/config/.env
           else
             echo "Advertencia: ~/backend.env no existe en el home del runner"
+            touch ./backend/src/config/.env
           fi
+          # Forzar PORT=1626: el .env se carga con override y pisaría cualquier otro valor
+          sed -i '/^[[:space:]]*PORT[[:space:]]*=/d' ./backend/src/config/.env
+          printf '\nPORT=1626\n' >> ./backend/src/config/.env
 
           
       - name: Instalar dependencias del Backend
@@ -50,11 +54,55 @@ jobs:
 
       - name: Desplegar Backend con PM2 (servidor único en puerto 1626)
         run: |
-          # Eliminar permanentemente api-frontend para que no interfiera
-          npx pm2 delete api-frontend 2>/dev/null || true
-          # Liberar el puerto 1626 si hubiese un proceso colgado
-          pkill -f 1626 2>/dev/null || true
-          sleep 1
-          # Reiniciar o iniciar api-backend (sirve tanto la API /api como el Frontend)
-          npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
+          echo "=== Procesos PM2 antes del despliegue ==="
+          npx pm2 ls || true
+
+          # 1) Borrar TODOS los servidores estáticos de PM2 (pm2 serve / api-frontend /
+          #    static-page-server-*). Estos responden index.html con HTTP 200 a cualquier
+          #    petición (incluido POST /api/auth/login) y rompen el login.
+          npx pm2 jlist 2>/dev/null | node -e '
+            let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
+              let list = []; try { list = JSON.parse(s); } catch {}
+              for (const p of list) {
+                const exec = (p.pm2_env && p.pm2_env.pm_exec_path) || "";
+                if (p.name === "api-frontend" || /static-page-server/.test(p.name) || /serve\.js$/.test(exec)) {
+                  console.log(p.name);
+                }
+              }
+            });' | while read -r name; do
+              echo "Eliminando servidor estático PM2: $name"
+              npx pm2 delete "$name" || true
+            done
+
+          # 2) Borrar api-backend para recrearlo limpio (evita script/env/puerto antiguos guardados)
+          npx pm2 delete api-backend 2>/dev/null || true
+
+          # 3) Liberar el puerto 1626 de cualquier proceso que lo siga usando
+          (command -v fuser >/dev/null && fuser -k 1626/tcp) 2>/dev/null || true
+          (command -v lsof >/dev/null && lsof -ti tcp:1626 | xargs -r kill -9) 2>/dev/null || true
+          sleep 2
+
+          # 4) Iniciar api-backend (sirve la API en /api y el Frontend compilado)
+          cd "$GITHUB_WORKSPACE/backend"
+          PORT=1626 npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend" --update-env
           npx pm2 save
+
+      - name: Verificar que la API responde JSON
+        run: |
+          for i in $(seq 1 15); do
+            CT=$(curl -s -o /tmp/login.out -w '%{content_type}' -X POST \
+                 -H 'Content-Type: application/json' -d '{}' \
+                 http://127.0.0.1:1626/api/auth/login || true)
+            if echo "$CT" | grep -qi 'application/json'; then
+              echo "OK: /api/auth/login responde JSON -> $(cat /tmp/login.out)"
+              exit 0
+            fi
+            echo "Intento $i: aún no responde JSON (content-type: '$CT')"
+            sleep 2
+          done
+          echo "ERROR: el backend no responde JSON en el puerto 1626"
+          echo "=== Respuesta recibida ==="; head -c 300 /tmp/login.out || true; echo
+          echo "=== PM2 ==="; npx pm2 ls || true
+          echo "=== ¿Quién usa el puerto 1626? ==="; (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null) | grep 1626 || true
+          echo "=== Logs api-backend ==="; npx pm2 logs api-backend --lines 80 --nostream || true
+          exit 1

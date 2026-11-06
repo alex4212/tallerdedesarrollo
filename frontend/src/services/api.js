@@ -1,10 +1,20 @@
-export const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined'
-    ? (window.location.port === '1626'
-        ? '/api'
-        : `${window.location.protocol}//${window.location.hostname}:1626/api`)
-    : 'http://localhost:1626/api');
+const resolveApiUrl = () => {
+  // Si la página la sirve el propio backend (puerto 1626), usar siempre la misma
+  // origen: evita depender de VITE_API_URL mal configurado.
+  if (typeof window !== 'undefined' && window.location.port === '1626') {
+    return '/api';
+  }
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  if (envUrl) {
+    return /\/api$/.test(envUrl) ? envUrl : `${envUrl}/api`;
+  }
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:1626/api`;
+  }
+  return 'http://localhost:1626/api';
+};
+
+export const API_URL = resolveApiUrl();
 
 export const BACKEND_URL = API_URL.replace(/\/api\/?$/, '');
 
@@ -29,7 +39,15 @@ export const fetchAPI = async (endpoint, options = {}) => {
   } else {
     const rawText = await response.text();
     console.warn(`Respuesta no JSON de ${endpoint} (HTTP ${response.status}):`, rawText.substring(0, 200));
-    data = { message: `Respuesta inesperada del servidor (HTTP ${response.status})` };
+    const isHtml = /^\s*<!doctype html|^\s*<html/i.test(rawText);
+    data = {
+      message: isHtml
+        ? `El servidor devolvió una página HTML en vez de la API (${API_URL}${endpoint}). El backend no está respondiendo en esa dirección.`
+        : `Respuesta inesperada del servidor (HTTP ${response.status})`,
+    };
+    if (isHtml && response.ok) {
+      throw new Error(data.message);
+    }
   }
 
   if (!response.ok) {
