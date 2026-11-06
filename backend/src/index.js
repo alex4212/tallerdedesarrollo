@@ -21,6 +21,17 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
+// Puertos adicionales (ej. EXTRA_PORTS=3000,80): en Docker el puerto público
+// puede estar mapeado a otro puerto interno. Si alguno falla, se ignora.
+(process.env.EXTRA_PORTS || '')
+  .split(',')
+  .map((p) => parseInt(p.trim(), 10))
+  .filter((p) => p && p !== Number(PORT))
+  .forEach((p) => {
+    const s = app.listen(p, '0.0.0.0', () => console.log(`También escuchando en el puerto ${p}`));
+    s.on('error', (err) => console.warn(`No se pudo escuchar en el puerto extra ${p}:`, err.message));
+  });
+
 const initDB = async (intento = 1) => {
   try {
     await connectDB();

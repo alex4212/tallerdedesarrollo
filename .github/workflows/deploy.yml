@@ -87,7 +87,8 @@ jobs:
 
           # 4) Iniciar api-backend (sirve la API en /api y el Frontend compilado)
           cd "$GITHUB_WORKSPACE/backend"
-          PORT=1626 npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend" --update-env
+          (command -v fuser >/dev/null && fuser -k 3000/tcp 80/tcp) 2>/dev/null || true
+          PORT=1626 EXTRA_PORTS=3000,80 npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend" --update-env
           npx pm2 save
 
       - name: Verificar que la API responde JSON
@@ -98,6 +99,11 @@ jobs:
                  http://127.0.0.1:1626/api/auth/login || true)
             if echo "$CT" | grep -qi 'application/json'; then
               echo "OK: /api/auth/login responde JSON -> $(cat /tmp/login.out)"
+              for P in 3000 80; do
+                echo "Puerto $P: $(curl -s -o /dev/null -w '%{http_code} %{content_type}' -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:$P/api/auth/login || echo 'sin respuesta')"
+              done
+              echo "=== Puertos escuchando ==="; (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null) || true
+              npx pm2 logs api-backend --lines 20 --nostream || true
               exit 0
             fi
             echo "Intento $i: aún no responde JSON (content-type: '$CT')"
