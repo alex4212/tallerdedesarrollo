@@ -53,6 +53,9 @@ jobs:
           npm install
 
       - name: Desplegar Backend con PM2 (servidor único en puerto 1626)
+        env:
+          # Evita que el runner mate PM2 y el backend al terminar el job
+          RUNNER_TRACKING_ID: ""
         run: |
           echo "=== Procesos PM2 antes del despliegue ==="
           npx pm2 ls || true
