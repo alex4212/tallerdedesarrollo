@@ -48,20 +48,13 @@ jobs:
           cd backend
           npm install
 
-      - name: Reiniciar Backend con PM2 en puerto 1626
+      - name: Desplegar Backend con PM2 (servidor único en puerto 1626)
         run: |
-          # Eliminar api-frontend por si ocupa el 1626 de un deploy anterior
+          # Eliminar permanentemente api-frontend para que no interfiera
           npx pm2 delete api-frontend 2>/dev/null || true
-          # Liberar el puerto 1626 de cualquier proceso huérfano
-          fuser -k 1626/tcp 2>/dev/null || true
-          sleep 2
-          npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
-
-      - name: Desplegar Frontend con PM2 en puerto 3000
-        run: |
-          # Eliminar api-frontend primero para forzar arranque limpio en 3000
-          npx pm2 delete api-frontend 2>/dev/null || true
+          # Liberar el puerto 1626 si hubiese un proceso colgado
+          pkill -f 1626 2>/dev/null || true
           sleep 1
-          # api-frontend SIEMPRE en puerto 3000, nunca en 1626
-          npx pm2 serve ./frontend/dist 3000 --name "api-frontend" --spa
+          # Reiniciar o iniciar api-backend (sirve tanto la API /api como el Frontend)
+          npx pm2 restart api-backend --update-env || npx pm2 start src/index.js --name "api-backend" --cwd "$GITHUB_WORKSPACE/backend"
           npx pm2 save
