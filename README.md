@@ -1,4 +1,4 @@
-#  Sistema Web Integrado - Aldea Infantil SOS Angol
+# Sistema Web Integrado - Aldea Infantil SOS Angol
 
 > Sistema web desarrollado para la digitalización y optimización de la gestión operativa, de seguridad y sostenibilidad de la Aldea Infantil SOS Angol.
 
