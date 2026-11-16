@@ -1,17 +1,17 @@
 const resolveApiUrl = () => {
-  // Si la página la sirve el propio backend (puerto 1626), usar siempre la misma
+  // Si la página la sirve el propio backend (puerto 3000 o 1626), usar siempre la misma
   // origen: evita depender de VITE_API_URL mal configurado.
-  if (typeof window !== 'undefined' && window.location.port === '1626') {
+  if (typeof window !== 'undefined' && (window.location.port === '3000' || window.location.port === '1626')) {
     return '/api';
   }
-  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  const envUrl = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || '').trim().replace(/\/+$/, '');
   if (envUrl) {
     return /\/api$/.test(envUrl) ? envUrl : `${envUrl}/api`;
   }
   if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.hostname}:1626/api`;
+    return `${window.location.protocol}//${window.location.hostname}:3000/api`;
   }
-  return 'http://localhost:1626/api';
+  return 'http://localhost:3000/api';
 };
 
 export const API_URL = resolveApiUrl();
